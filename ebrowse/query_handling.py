@@ -1,7 +1,10 @@
 from flask import Flask, request
 from flask import jsonify, send_from_directory
 from ebrowse.eqtl import LeadEqtls, SubEqtls
-from . import PATHS
+from ebrowse import PATHS
+import re
+from collections import OrderedDict
+from ebrowse.shipping.lead_table import column_order as lead_table_column_order
 
 app = Flask(__name__)
 
@@ -66,6 +69,57 @@ def get_sub_eqtl(dataset_id, variantId, probeId, fwdIter):
     dict_out = get_return_dict()
     dict_out['detailed_eqtl'] = {dataset_id:{variantId:{probeId:{fwdIter:ret}}}}
     return jsonify(dict_out)
+
+
+def parse_datatable_args(in_dict):
+    ret = {}
+    for k, v in in_dict.items():
+        key_elms = [tk for tk in re.split(r'\[|\]', k) if tk != ""]
+        rec_el = ret
+        for sub_k in key_elms[:-1]:
+            if sub_k not in rec_el:
+                rec_el[sub_k] = {}
+            rec_el = rec_el[sub_k]
+        rec_el[key_elms[-1]] = v
+    return ret
+
+def parse_datatable_order(order_dict, column_labels):
+    ret_order_dict = OrderedDict()
+    for k in range(len(order_dict.keys())):
+        v = order_dict[str(k)]
+        ret_order_dict[column_labels[int(v['column'])]] = v['dir'].upper()
+    return ret_order_dict
+
+
+@app.route('/lead_table')
+def get_lead_table():
+    args_dict = parse_datatable_args(request.args)
+    # most of the args_dict can be ignored: only relevant is
+    entries_per_page = int(args_dict['length'])
+    draw_key = int(args_dict['draw'])
+    order = parse_datatable_order(args_dict['order'], lead_table_column_order)
+    search_str = args_dict['search']['value']
+    search_is_regex = args_dict['search']['regex'] == 'true'
+    start = int(args_dict['start'])
+
+    return jsonify(ret)
+
+"""
+#https://datatables.net/reference/option/columns.render
+for the hrefs use:
+$('#example').dataTable( {
+  "columnDefs": [ {
+    "targets": 4,
+    "data": "description",
+    "render": function ( data, type, row, meta ) {
+      return type === 'display' && data.length > 40 ?
+        '<span title="'+data+'">'+data.substr( 0, 38 )+'...</span>' :
+        data;
+    }
+  } ]
+} );
+"""
+
 
 
 @app.route('/igvdir/<path:path>')
