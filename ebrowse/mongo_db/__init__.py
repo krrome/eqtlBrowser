@@ -1,4 +1,5 @@
 import mongoengine
+from ebrowse import PATHS
 from mongoengine import Document, FloatField, IntField, StringField, EmbeddedDocumentListField, EmbeddedDocument, BooleanField, BinaryField
 
 
@@ -14,7 +15,7 @@ transfer_keys_colocalisation = ["cellType","trait","probeId","chi2Eqtl","chi2Gwa
                                 "indexGroupGwas","pvaluesEqtl","pvaluesGwas","variantId","snpProbEqtl","snpProbGwas"]
 
 
-mongoengine.connect('eqtl_data')
+mongoengine.connect('eqtl_data', host=PATHS['mongo_host'], port=27017)
 
 TOTAL_LEAD_RECORDS = None
 
