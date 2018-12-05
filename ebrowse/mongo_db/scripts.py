@@ -41,6 +41,8 @@ def generate_full_sets():
     fd = FinemapData()
     for lead, details in get_all_results_iter():
         lead['id'] = ler_primary_key(lead)  # add the unique ID
+        if LeadEqtlResult.objects(id=lead['id']).count() > 0:
+            continue
         # also add the colocalising hits.
         colocs = fd.query(lead['id'])
         lead['colocalisation'] = []

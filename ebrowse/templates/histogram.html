@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.bar rect {
+  shape-rendering: crispEdges;
+}
+
+.bar text {
+  fill: #999999;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.tooltip {
+  position: absolute;
+  width: 100px;
+  height: 28px;
+  padding-left: 5px;
+  pointer-events: none;
+  background-color: white;
+}
+
+.geneLabel{
+  position: absolute;
+  background-color: white;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+// Taken from: http://bl.ocks.org/nnattawat/8916402
+
+
+var color = "steelblue";
+var nbins = 200;
+
+var tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+var geneLabel = d3.select("body").append("div")
+    .attr("class", "geneLabel");
+
+var query_hgnc = "{{ geneSymbol }}"
+
+
+d3.json("http://127.0.0.1:8089/{{ expr_hist_link }}?cellType={{ cellType }}", function(json_data) {
+  //
+  var values = json_data.med_expr;
+
+  var hgnc_idx = json_data.hgnc.indexOf(query_hgnc);
+  if (hgnc_idx != -1){
+    queried_value = values[hgnc_idx]
+  }
+
+
+  // A formatter for counts.
+  var formatCount = d3.format(",.0f");
+
+  var margin = {top: 20, right: 30, bottom: 30, left: 50},
+      width = 960 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom;
+
+  var max = d3.max(values);
+  var min = d3.min(values);
+  var x = d3.scale.linear()
+        .domain([min, max])
+        .range([width*0.005, width]);
+
+  // Generate a histogram using twenty uniformly-spaced bins.
+  var data = d3.layout.histogram()
+      .bins(x.ticks(nbins))
+      (values);
+
+  var yMax = d3.max(data, function(d){return d.length});
+  var yMin = d3.min(data, function(d){return d.length});
+  var colorScale = d3.scale.linear()
+              .domain([yMin, yMax])
+              .range([d3.rgb(color).brighter(), d3.rgb(color).darker()]);
+
+  var y = d3.scale.linear()
+      .domain([0, yMax])
+      .range([height, 0]);
+
+  var xAxis = d3.svg.axis()
+      .scale(x)
+      .orient("bottom");
+
+  var yAxis = d3.svg.axis()
+      .scale(y)
+      .orient("left");
+
+  var svg = d3.select("body").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  var bar = svg.selectAll(".bar")
+      .data(data)
+    .enter().append("g")
+      .attr("class", "bar")
+      .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; })
+      .on("mouseover", function(d) {
+          tooltip.transition()
+               .duration(200)
+               .style("opacity", .9);
+          tooltip.html("Expression: "+d.x+"<br />Count: "+formatCount(d.y))
+               .style("left", (d3.event.pageX + 5) + "px")
+               .style("top", (d3.event.pageY - 28) + "px");
+      })
+      .on("mouseout", function(d) {
+          tooltip.transition()
+               .duration(500)
+               .style("opacity", 0);
+      });
+
+  bar.append("rect")
+      .attr("x", 1)
+      .attr("width", (x(data[0].dx) - x(0)) - 1)
+      .attr("height", function(d) { return height - y(d.y); })
+      .attr("fill", function(d) { return colorScale(d.y) });
+
+  if (queried_value){
+    line = svg.append("line")
+      .attr("x1", x(queried_value))  //<<== change your code here
+      .attr("y1", y(0))
+      .attr("x2", x(queried_value))  //<<== and here
+      .attr("y2", y(yMax))
+      .style("stroke-width", 2)
+      .style("stroke", "red")
+      .style("fill", "none");
+`
+    svg.append("text")
+    .attr("y", y(yMax*0.9))
+    .attr("x", x(queried_value))
+    .attr("text-anchor", "middle")
+    .text(function(d) { return query_hgnc; });
+    geneLabel.html(query_hgnc)
+               .style("left", ( margin.left + x(queried_value)) + "px")
+               .style("top", y(yMax*0.9) + "px");
+`
+
+  }
+
+  svg.append("text")
+        .attr("x", (width / 2))
+        .attr("y", 0 + (margin.top / 2))
+        .attr("text-anchor", "middle")
+        .style("font-size", "18px")
+        //.style("text-decoration", "underline")
+        .text("Expression distribution in "+json_data.cellType+" ("+query_hgnc+" marked in red)");
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+      .append("text")
+      .attr("class", "label")
+      .attr("x", width)
+      .attr("y", -6)
+      .style("text-anchor", "end")
+      .text("Normalised gene expression");
+
+  // y-axis
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("class", "label")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Frequency");
+});
+
+</script>
+</body>
+</html>

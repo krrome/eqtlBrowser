@@ -1,0 +1,539 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Bootstrap Table</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
+
+    <script src="http://127.0.0.1:8089/static_files/promise.js"></script>
+    <script src="http://127.0.0.1:8089/static_files/zlib_and_gzip.js"></script>
+    <script src="http://127.0.0.1:8089/static_files/inflate.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="http://127.0.0.1:8089/static_files/igv.css">
+    <link rel="stylesheet" type="text/css" href="http://127.0.0.1:8089/static_files/fa-svg-with-js.css"/>
+    <script type="text/javascript" src="http://127.0.0.1:8089/static_files/igv.js"></script>
+
+	<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="https:/maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="https://rawgit.com/wenzhixin/bootstrap-table/master/src/bootstrap-table.css">
+    <script type="text/javascript" src="https://rawgit.com/wenzhixin/bootstrap-table/master/src/bootstrap-table.js"></script>
+    <script src="https://rawgit.com/wenzhixin/bootstrap-table/master/src/extensions/filter-control/bootstrap-table-filter-control.js"></script>
+
+
+  <style type="text/css">
+    #page-wrapper {
+    padding: 0 2.6%;
+    padding-top: 50px;
+    padding-right: 2.6%;
+    padding-bottom: 0px;
+    padding-left: 2.6%;
+    position: relative;
+	}
+
+  </style>
+
+  <script type="text/javascript">
+  	window.eqtl_detail_tracks = [];
+
+	$(window).load(function(){
+		$(function () {
+		});
+	    $('#lead_table').on('post-body.bs.table', function (e, data) {
+	        //set_header_tt(e.target.getAttribute("id"));
+	        $('[data-toggle="tooltip"]').tooltip();
+	    });
+    });
+
+	////// To highlight individual rows
+	function rowStyle(row, index) {
+	  if (window.eqtl_detail_tracks.indexOf(row.id) != -1) {
+	    return {
+	      classes: 'text-nowrap another-class',
+	      css: {"background-color": "#b2ad7f"}
+	    };
+	  } else {
+	    if (row.hasOwnProperty("my_hidden_id") && row["my_hidden_id"] == "gajhsdg7"){
+	      return {css: {"color": "green", "font-size": "15px"}}
+	    }
+	    return {};
+	  }
+
+	}
+
+    function lead_fn_formatter(value, row, index, field) {
+        glyphs = {"glyphicon-search": 'igv_go_to(\'chr'+row.chromosome+'\', '+row.start+')', "glyphicon-plus": 'create_track_by_id(\''+row.id+'\', \''+row.geneSymbol+'\')', "glyphicon-eye-open": 'add_scatter(\''+row.id+'\')'}
+        glyph_tooltips = {"glyphicon-search": 'Zoom in genome browser', "glyphicon-plus": 'Add to genome browser', "glyphicon-eye-open": 'Display expression boxplot'}
+        html_str = "<div>"
+        for (gl in glyphs) {
+        	if ((gl == 'glyphicon-plus') && (window.eqtl_detail_tracks.indexOf(row.id) != -1)) continue;
+            html_str += '<a href="#genome_browser"><span class="glyphicon '+gl+'" aria-hidden="true" onclick="'+glyphs[gl]+'" data-toggle="tooltip" data-placement="bottom" title="'+glyph_tooltips[gl]+'"></span></a> ';
+        }
+        html_str += "</div>"
+        return html_str
+    }
+
+
+   function add_scatter(id) {
+        href = "http://127.0.0.1:8089/expr_boxplot?id="+id;
+        window.open(href);
+    }
+    
+    function round_nicely(value, row, index, field){
+        return value.toPrecision(3);
+    }
+
+    function refresh_table(table_id){
+        $('#'+table_id).bootstrapTable('refresh', {silent: true});
+        //$('#'+table_id).bootstrapTable('refresh');
+    }
+
+    function set_header_tt(table_id){
+        ranges_tt =  "Include '>' or '<' to search in ranges";
+        header_tooltips = {'beta': ranges_tt, 'pValue': ranges_tt};
+        for (df in header_tooltips){
+            $('#'+table_id+'.th').find('[data-field="'+df+'"]').attr('data-toggle', 'tooltip').attr('data-placement', 'bottom').attr('title', header_tooltips[df]);
+        }
+    }
+
+
+
+
+</script>
+
+    <script type="text/javascript">
+
+    <!-- TODO:FIX THIS -->
+    igv_eqtl_baseurl = 'http://127.0.0.1:8089/';
+    table_ajax_url = igv_eqtl_baseurl;
+
+    refresh_eqtl_detail_tracks = function(){
+    	all_tracks = igv.browser.trackViews;
+		var tracks_ids = [];
+		all_tracks.forEach(function (trackView) {
+		    if (trackView.track instanceof igv.BloodSignalEqtlTrack){
+		        if (trackView.track.config.id) {
+					tracks_ids.push(trackView.track.config.id);
+		        }
+		    }
+		})
+		window.eqtl_detail_tracks = tracks_ids;
+		refresh_table('lead_table');
+    }
+
+
+    create_lead_track = function(cellType, dataset){
+        igv.browser.loadTrack({
+                         type: 'bloodeqtl',
+                         sourceType: 'bloodeqtl',
+                         url: igv_eqtl_baseurl,
+                         dataset: dataset,
+                         cellType: cellType,
+                         name: cellType + ' blood eQTL data',
+                         });
+    };
+
+
+     create_track= function(variant, probeId, fwdIter, cellType, dataset, hgnc, var_chrom="", var_pos=0){
+        igv.browser.loadTrack({
+                         type: 'bloodsignaleqtl',
+                         sourceType: 'bloodsignaleqtl',
+                         url: igv_eqtl_baseurl,
+                         queryVarId:variant,
+                         queryProbeId:probeId,
+                         fwdIter:fwdIter,
+                         cellType: cellType,
+                         name: cellType+': ' + hgnc + '(' + probeId + '): ' + variant,
+                         dataset: dataset,
+                         id: 'blablabla',
+                         });
+        if ((var_chrom != "") && (var_pos != 0)){
+            igv.browser.goto(var_chrom, var_pos-10000, var_pos+10000);
+        }
+
+    };
+
+    create_track_by_id= function(id, hgnc = "", var_chrom="", var_pos=0){
+    	// The name generation could be done a bit more elegantly with another query to the server 
+    	var id_splits = id.split("_"),
+    		cellType = id_splits[2],
+    		probeId = id_splits[3],
+    		variant = id_splits[4];
+        igv.browser.loadTrack({
+                         type: 'bloodsignaleqtl',
+                         sourceType: 'bloodsignaleqtl',
+                         url: igv_eqtl_baseurl,
+                         id:id,
+                         name: cellType+': ' + hgnc + ' (' + probeId + '): ' + variant,
+                         });
+        if ((var_chrom != "") && (var_pos != 0)){
+            igv.browser.goto(var_chrom, var_pos-10000, var_pos+10000);
+        }
+
+    };
+
+    igv_go_to = function(var_chrom, var_pos){
+    	if ((var_chrom != "") && (var_pos != 0)){
+            igv.browser.goto(var_chrom, var_pos-10000, var_pos+10000);
+        }
+    }
+
+
+    create_epi_tracks = function(cellType){
+        $.getJSON( igv_eqtl_baseurl + 'get_epi_tracks?cellType='+cellType, function( data ) {
+
+            for (i in data){
+                igv.browser.loadTrack(data[i]);
+            };
+          //$.each( data, function( inner_dict ) {
+          //  config = {name: inner_dict.name, type: inner_dict.type, height: inner_dict.height, url: inner_dict.url};
+          //  igv.browser.loadTrack(config);
+          //});
+        });
+
+    };
+
+    </script>
+
+
+
+    <script type="text/javascript">
+
+    $(document).ready(function () {
+
+        var div,
+                options,
+                browser;
+
+        div = $("#igv_div")[0];
+        options = {
+            genome: "hg19",
+            showNavigation: true,
+            fastaURL: 'https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg19/hg19.fasta',
+            cytobandURL: 'https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg19/cytoBand.txt',
+            // locus: 'SLC25A3',
+            locus: 'rs28372744',
+            // locus: ['egfr', 'myc', 'pten'],
+            // locus: ['2', '4', '8'],
+            flanking: 7500,
+            //locus: 'SLC25A3',
+            locus: 'chr1:241461541-249250621',
+            // locus: ['egfr', 'myc', 'pten'],
+            // locus: ['2', '4', '8'],
+            formats: {
+                gwasSNPS: {
+                    coords: 0,
+                    chr: 0,
+                    start: 1,
+                    end: 2,
+                    fields: ["chrom", "chromStart", "chromEnd", "Strongest SNP-risk allele", "Disease/Phenotype", "P-value", "Odds ratio or beta", "PUBMEDID"]
+                }
+            },
+            tracks: [
+                {
+                     type: 'bloodeqtl',
+                     sourceType: 'bloodeqtl',
+                     url: igv_eqtl_baseurl,
+                     dataset: 'merged',
+                     cellType: 'CD14',
+                     name: 'CD14 blood eQTL data',
+                },
+                {
+                    featureType: 'genes',
+                    url: 'http://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg19/genes/gencode.v18.collapsed.bed',
+                    name: 'Genes',
+                    order: 10000,
+                    displayMode: 'EXPANDED',
+                    height: 100,
+                    autoHeight: true,
+                    removable: false,
+                    labelDisplayMode: 'SLANT'
+                }
+            ]
+        };
+
+        browser = igv.createBrowser(div, options);
+
+        refresh_eqtl_detail_tracks();
+        // igv.browser.search("psphp1");
+
+        igv.browser.on("trackremoved", function(e){
+			refresh_eqtl_detail_tracks();
+        });
+
+        igv.browser.on("trackadded", function(e){
+			refresh_eqtl_detail_tracks();
+        });
+
+    });
+
+
+    </script>
+
+
+
+	<script type="text/javascript">
+
+	function cancel_file_picker(evt){
+	    new_file = document.getElementById("new_file");
+	    new_idxfile = document.getElementById("new_idxfile");
+	    files = [new_file, new_idxfile]
+	    for (i in files){
+	        try{
+	            files[i].value = '';
+	            if(files[i].value){
+	                files[i].type = "text";
+	                files[i].type = "file";
+	            }
+	        }catch(e){}
+	    }
+	    file_picker_modal.style.display = "none";
+	}
+
+	function add_file_picker(evt){
+	    new_file = document.getElementById("new_file");
+	    new_idxfile = document.getElementById("new_idxfile");
+
+	    track_data = {url: new_file.files[0]};
+	    if (new_idxfile.value != ''){
+	        track_data['indexURL'] = new_idxfile.files[0];
+	    }
+
+	    igv.browser.loadTrack(track_data);
+	    cancel_file_picker(evt);
+	}
+
+	$(document).ready(function () {
+
+		    // Get the modal
+		var file_picker_modal = document.getElementById('filePicker');
+
+		// Get the button that opens the modal
+		var file_picker_modal_btn = document.getElementById("filePickerModalBtn");
+
+		// Get the <span> element that closes the modal
+		var close_file_picker = document.getElementsByClassName("close-filePicker")[0];
+
+		// When the user clicks on the button, open the modal
+		file_picker_modal_btn.onclick = function() {
+		    file_picker_modal.style.display = "block";
+		}
+
+		document.getElementById('filePickerCancelBtn').addEventListener('click', cancel_file_picker, false);
+		document.getElementById('filePickerAddBtn').addEventListener('click', add_file_picker, false);
+
+		// When the user clicks on <close_file_picker> (x), close the modal
+		close_file_picker.onclick = function() {
+		    file_picker_modal.style.display = "none";
+		}
+
+		// When the user clicks anywhere outside of the modal, close it
+		window.onclick = function(event) {
+		    if (event.target == file_picker_modal) {
+		        file_picker_modal.style.display = "none";
+		    }
+		}
+	});
+	</script>
+
+    <style type="text/css">
+        /* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1001; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+    -webkit-border-radius: 5px !important;
+    -moz-border-radius: 5px !important;
+    border-radius: 5px !important;
+}
+
+/* The Close Button */
+.close-filePicker {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+.filePicker-title {
+    color: #aaa;
+    float: left;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-filePicker:hover,
+.close-filePicker:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+    </style>
+<!-- end IGV deps -->
+
+
+</head>
+<body>
+ <div id="page-wrapper">
+
+ 	<header>
+		<nav class="navbar navbar-default navbar-fixed-top" role="navigation"> <!--navbar-fixed-top-->
+		  <div class="container-fluid">
+		    <!-- Brand and toggle get grouped for better mobile display -->
+		    <div class="navbar-header">
+		      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+		        <span class="sr-only">Toggle navigation</span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		      </button>
+		      <a class="navbar-brand" href="#">Blood eQTL browser</a>
+		    </div>
+
+		    <!-- Collect the nav links, forms, and other content for toggling -->
+		    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+		      <ul class="nav navbar-nav">
+		        <li class="dropdown">
+		          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Tables<span class="caret"></span></a>
+		          <ul class="dropdown-menu" role="menu">
+		            <li><a href="#" id="tested_genes_menu" data-target="#tested_genes_table" class="table_menuitem">Tested genes</a></li>
+		            <li><a href="#" id="lead_eqtls_menu" data-target="#lead_table" class="table_menuitem">Lead eQTL variants</a></li>
+		          </ul>
+		        </li>
+		        <li class="dropdown">
+		          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Genome Browser<span class="caret"></span></a>
+		          <ul class="dropdown-menu" role="menu">
+		            <li><a href="#" id="load_file_menu" data-target="#filePicker" class="gb_menuitem" tabindex="-1">Load local file...</a></li>
+		            <li class="divider"></li>
+		            <li><a href="#">CD4 lead eQTLs</a></li>
+		            <li><a href="#">CD8 lead eQTLs</a></li>
+		            <li><a href="#">CD14 lead eQTLs</a></li>
+		            <li><a href="#">MAC lead eQTLs</a></li>
+		            <li><a href="#">CD15 lead eQTLs</a></li>
+		            <li><a href="#">CD19 lead eQTLs</a></li>
+		            <li><a href="#">PLT lead eQTLs</a></li>
+		            <li class="divider"></li>
+		            <li><a href="#">CD4 epigenetic annotation</a></li>
+		            <li><a href="#">CD8 epigenetic annotation</a></li>
+		            <li><a href="#">CD14 epigenetic annotation</a></li>
+		            <li><a href="#">MAC epigenetic annotation</a></li>
+		            <li><a href="#">CD15 epigenetic annotation</a></li>
+		            <li><a href="#">CD19 epigenetic annotation</a></li>
+		            <li><a href="#">PLT epigenetic annotation</a></li>
+		          </ul>
+		        </li>
+		      </ul>
+		      <ul class="nav navbar-nav navbar-right">
+		        <li><a href="#">Link</a></li>
+		        <li class="dropdown">
+		          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <span class="caret"></span></a>
+		          <ul class="dropdown-menu" role="menu">
+		            <li><a href="#">Action</a></li>
+		            <li><a href="#">Another action</a></li>
+		            <li><a href="#">Something else here</a></li>
+		            <li class="divider"></li>
+		            <li><a href="#">Separated link</a></li>
+		          </ul>
+		        </li>
+		      </ul>
+		    </div><!-- /.navbar-collapse -->
+		  </div><!-- /.container-fluid -->
+		</nav>
+ 	</header>
+
+
+
+
+
+  <h1>Tested genes</h1>
+  <table id="tested_genes_table" data-toggle="table"
+       data-url="http://127.0.0.1:8089/tested_probes"
+       data-pagination="true"
+       data-side-pagination="server"
+       data-sort-name="variantId"
+       data-toggle="table"
+       data-filter-control="true"
+       data-filter-show-clear="true">
+    <thead>
+    <tr>
+    	<th data-field="cellType" data-searchable="true" data-sortable="true" data-filter-control="input">Cell type</th>
+        <th data-field="probeId" data-searchable="true" data-sortable="true" data-filter-control="input">Probe ID</th>
+        <th data-field="geneSymbol" data-searchable="true" data-sortable="true" data-filter-control="input">Gene symbol(s)</th>
+    </tr>
+    </thead>
+    </table>
+
+  <h1>Lead variants of eQTLs</h1>
+  <table id="lead_table" data-toggle="table"
+       data-url="http://127.0.0.1:8089/new_lead_table"
+       data-pagination="true"
+       data-side-pagination="server"
+       data-row-style="rowStyle"
+       data-sort-name="variantId"
+       data-toggle="table"
+       data-filter-control="true"
+       data-filter-show-clear="true">
+    <thead>
+    <tr>
+        <th data-formatter="lead_fn_formatter" data-width="70px"></th>
+        <th data-field="cellType" data-searchable="true" data-sortable="true" data-filter-control="input">Cell type</th>
+        <th data-field="chromosome" data-searchable="true" data-sortable="true" data-filter-control="input">Chr</th>
+        <th data-field="geneSymbol" data-searchable="true" data-sortable="true" data-filter-control="input">Gene Symbol</th>
+        <th data-field="variantId" data-searchable="true" data-sortable="true" data-filter-control="input">Variant</th>
+        <th data-field="snpId" data-searchable="true" data-sortable="true" data-filter-control="input">rs-id</th>
+        <th data-field="pValue" data-searchable="true" data-sortable="true" data-filter-control="input" data-formatter="round_nicely">p-Value</th>
+        <th data-field="beta" data-searchable="true" data-sortable="true" data-filter-control="input" data-formatter="round_nicely">Effect size</th>
+        <th data-field="fwdIter" data-searchable="true" data-sortable="true" data-filter-control="input">Indep. sig.</th>
+        <th data-field="start" data-searchable="true" data-sortable="true" data-filter-control="input">Position</th>
+        <th data-field="probeId" data-searchable="true" data-sortable="true" data-filter-control="input">Probe ID</th>
+    </tr>
+    </thead>
+    </table>
+
+
+	<h1 id="genome_browser">Genome browser</h1>
+	<!-- Trigger/Open The Modal -->
+	<button id="filePickerModalBtn">Add file to browser...</button>
+
+	<!-- The Modal -->
+	<div id="filePicker" class="modal">
+
+	  <!-- Modal content -->
+	  <div class="modal-content">
+	    <span class="close-filePicker">&times;</span>
+	      <h1 class="filePicker-title">Add file...</h1>
+	      <br /><br /><br /><br />
+	        <p>Select input file: <input type="file" id="new_file" name="files[]" /></p>
+	        <p>If this file has an index file (.idx, .bai, ...) select it here: <input type="file" id="new_idxfile" name="files[]" /></p>
+	      <button id="filePickerCancelBtn">Cancel</button>
+	      <button id="filePickerAddBtn">Add</button>
+	  </div>
+
+	</div>
+
+	<div id="igv_div" style="padding-top: 50px;padding-bottom: 20px; height: auto"></div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,3 @@
+include local_paths.yaml
+include ebrowse/static_files/*
+include ebrowse/templates/*

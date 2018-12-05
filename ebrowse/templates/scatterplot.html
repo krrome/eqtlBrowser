@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+
+<!-- Example based on http://bl.ocks.org/mbostock/3887118 -->
+<!-- Tooltip example from http://www.d3noob.org/2013/01/adding-tooltips-to-d3js-graph.html -->
+<!-- Coding style based on http://gist.github.com/mbostock/5977197 -->
+
+<style>
+body {
+  font: 11px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.dot {
+  stroke: #000;
+}
+
+.tooltip {
+  position: absolute;
+  width: 200px;
+  height: 28px;
+  pointer-events: none;
+}
+
+.svg-container {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%; /* aspect ratio */
+    vertical-align: top;
+    overflow: hidden;
+}
+.svg-content-responsive {
+    display: inline-block;
+    position: absolute;
+    top: 0px;
+    left: 0;
+}
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<a id="download_scatter">Download</a>
+<div id="chartId">
+</div>
+
+<script>
+var full_width = 960,
+    full_height = 500;
+
+var margin = {top: 10, right: 20, bottom: 30, left: 40},
+    width = full_width - margin.left - margin.right,
+    height = full_height - margin.top - margin.bottom;
+
+
+d3.select("div#chartId")
+   .append("div")
+   .classed("svg-container", true) //container class to make it responsive
+   .append("svg")
+   .attr("id", "scatterSVG")
+   //responsive SVG needs these 2 attributes and no width and height attr
+   .attr("preserveAspectRatio", "xMinYMin meet")
+   .attr("viewBox", (margin.left* (-2)) + " " + (margin.top* (-2)) + " " + (full_width + (margin.left + margin.right)*2) + " " + (height+(margin.top + margin.bottom)*2))
+   //class to make it responsive
+   .classed("svg-content-responsive", true);
+
+/*
+ * value accessor - returns the value to encode for a given data object.
+ * scale - maps value to a visual display encoding, such as a pixel position.
+ * map function - maps from data value to display value
+ * axis - sets up axis
+ */
+
+
+// setup y
+var yValue = function(d) { return d["Protein (g)"];}, // data -> value
+    yScale = d3.scale.linear().range([height, 0]), // value -> display
+    yMap = function(d) { return yScale(yValue(d));}, // data -> display
+    yAxis = d3.svg.axis().scale(yScale).orient("left");
+
+// setup fill color
+var cValue = function(d) { return d.Manufacturer;},
+    color = d3.scale.category10();
+
+set_download_img = function(){
+    //https://stackoverflow.com/questions/11620698/how-to-trigger-a-file-download-when-clicking-an-html-button-or-javascript
+
+    elm_id = "scatterSVG"
+      //get svg element.
+    var svg = document.getElementById(elm_id);
+
+    //get svg source.
+    var serializer = new XMLSerializer();
+    var source = serializer.serializeToString(svg);
+
+    //add name spaces.
+    if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+        source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    if(!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)){
+        source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+    }
+
+    //add xml declaration
+    source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+
+    //convert svg source to URI data scheme.
+    var url = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(source);
+
+    //set url value to a element's href attribute.
+    document.getElementById("download_scatter").href = url;
+    //you can download svg file by right click menu.
+}
+
+function writeDownloadLink(){
+    var html = d3.select("#scatterSVG")
+        .attr("title", "svg_title")
+        .attr("version", 1.1)
+        .attr("xmlns", "http://www.w3.org/2000/svg")
+        .node().parentNode.innerHTML;
+    d3.select("#download_scatter")
+        .attr("href-lang", "image/svg+xml")
+        .attr("href", "data:image/svg+xml;base64,\n" + btoa(html))
+};
+
+
+
+// add the graph canvas to the body of the webpage
+//var svg = d3.select("body").append("svg")
+//    .attr("width", width + margin.left + margin.right)
+//    .attr("height", height + margin.top + margin.bottom)
+//  .append("g")
+//    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var svg = d3.select("#scatterSVG")
+
+// add the tooltip area to the webpage
+var tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+// load data
+d3.json("http://127.0.0.1:8089/{{ expr_plot_link }}?id={{ id }}", function(json_data) {
+  // don't want dots overlapping axis, so add in buffer to data domain
+
+  data = []
+  dot_label_idx = []
+
+  jitter = 0.05*width
+
+  // shuffle the dots around
+  re_index = d3.shuffle(d3.range(json_data.geno_col.length))
+
+  var counts_per_gt_label = {}
+
+  for (i0=0; i0 < json_data.genoLabels.length; i0++){
+    counts_per_gt_label[json_data.genoLabels[i0]] = 0;
+  }
+
+
+  for (i0=0; i0 < json_data.geno_col.length; i0++){
+    i = re_index[i0]
+    val = json_data.pheno_col[i];
+    label = json_data.dot_labels[i];
+    gt = Math.floor(json_data.geno_col[i]);
+    gt_class = json_data.genoLabels[gt];
+    counts_per_gt_label[gt_class] += 1;
+    if (dot_label_idx.indexOf(label) == -1) dot_label_idx.push(label);
+    data.push({"geno_col":json_data.geno_col[i] + Math.random()*jitter - (jitter/2), "pheno_col":json_data.pheno_col[i], "dot_label":label, "gt_class": gt_class})
+  }
+
+
+  x_domain = []
+  for(var key in counts_per_gt_label) {
+    if (counts_per_gt_label[key] != 0){
+        x_domain.push(key);
+    }
+  }
+
+  x_range = [width*0.2]
+  if (x_domain.length == 3) x_range.push(width/2);
+  x_range.push(width*0.8);
+
+  // setup x
+  var xScale = d3.scale.ordinal().range(x_range),
+    xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+
+
+  xScale.domain(json_data.genoLabels);
+  yScale.domain([d3.min(json_data.pheno_col)-1, d3.max(json_data.pheno_col)+1]);
+
+
+  label_to_i = function(label) {return label;}
+
+  cellType = json_data.assoc_info.cellType;
+  geneSymbol = json_data.assoc_info.geneSymbol;
+  snpId = json_data.assoc_info.snpId;
+
+  // add a title
+  svg.append("text")
+        .attr("x", (width / 2))
+        .attr("y", 0 + (margin.top / 2))
+        .attr("text-anchor", "middle")
+        .style("font-size", "18px")
+        //.style("text-decoration", "underline")
+        .text("Expression boxplot ("+geneSymbol+" vs. "+snpId+") in "+ cellType);
+
+  // x-axis
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+    .append("text")
+      .attr("class", "label")
+      .attr("x", width/2)
+      .attr("y", -6)
+      .style("text-anchor", "middle")
+      .text("Genotype");
+
+  // y-axis
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("class", "label")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Expression");
+
+  // draw dots
+  svg.selectAll(".dot")
+      .data(data)
+    .enter()
+      .append("circle")
+      .attr("class", "dot")
+      .style("stroke", "none")
+      .attr("r", 2)
+      .attr("cx", function(d){
+        return xScale(d.gt_class) + Math.random()*jitter - (jitter/2)
+      })
+      .attr("cy", function(d){return yScale(d.pheno_col)})
+      .style("opacity", 0.5)
+      .style("fill", function(d) { return color(label_to_i(d.dot_label));})
+      .on("mouseover", function(d) {
+          tooltip.transition()
+               .duration(200)
+               .style("opacity", .9);
+          tooltip.html("Expression: "+d.pheno_col+"<br />Dataset: "+d.dot_label)
+               .style("left", (d3.event.pageX + 5) + "px")
+               .style("top", (d3.event.pageY - 28) + "px");
+      })
+      .on("mouseout", function(d) {
+          tooltip.transition()
+               .duration(500)
+               .style("opacity", 0);
+      });
+
+  // draw legend
+  var legend = svg.selectAll(".legend")
+      .data(color.domain())
+    .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+  // draw legend colored rectangles
+  legend.append("rect")
+      .attr("x", width - 18)
+      .attr("width", 18)
+      .attr("height", 18)
+      .style("fill", color);
+
+  // draw legend text
+  legend.append("text")
+      .attr("x", width - 24)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "end")
+      .text(function(d) { return d;})
+
+  set_download_img();
+});
+
+
+
+</script>
+
+</body>
+</html>

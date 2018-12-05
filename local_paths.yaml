@@ -19,3 +19,7 @@ ebi_testing:
     mysqldb_port: 3308
     db_user: ebrowse
     db_pwd: mergedEqtlData
+production:
+    flask_port: 5000
+    igv_repo_dir: /nfs/research1/stegle/users/rkreuzhu/webapp_data/igv.js/
+    epi_dir: /nfs/research1/stegle/users/rkreuzhu/webapp_data/epi

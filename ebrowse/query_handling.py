@@ -1,7 +1,6 @@
 from flask import Flask, request
 from flask import jsonify, send_from_directory
 from flask import abort
-from ebrowse.eqtl import LeadEqtls, SubEqtls
 from ebrowse import PATHS
 import re
 from collections import OrderedDict
@@ -14,6 +13,11 @@ from flask import render_template
 from ebrowse.epi_annotation import get_celltypes, get_tracks
 
 app = Flask(__name__)
+
+# Something funky is happening in the default setting...
+import jinja2
+import pkg_resources
+app.jinja_loader = jinja2.FileSystemLoader(pkg_resources.resource_filename("ebrowse", "templates"))
 
 def get_return_dict():
     return {"format": "0.1"}
@@ -241,6 +245,15 @@ def get_expr_boxplot():
         abort(404)
     return render_template('scatterplot.html', expr_plot_link = "expr_boxplot_data", **query)
 
+@app.route('/expr_hist')
+def get_expr_hist():
+    query = {}
+    query["geneSymbol"] = request.args.get('geneSymbol', default=None)
+    query["cellType"] = request.args.get('cellType', default=None)
+    if any([query[k] is None or query[k] == "" for k in query]):
+        abort(404)
+    return render_template('histogram.html', expr_hist_link="expr_hist_data", **query)
+
 
 @app.route('/expr_hist_data')
 def get_expr_hist_data():
@@ -254,6 +267,7 @@ def get_expr_hist_data():
 
 @app.route('/')
 def index():
+    return render_template('pre_production.html')
     var_id_col = lead_table_column_order.index("variantId")
     probe_id_col = lead_table_column_order.index("probeId")
     fwd_iter_col = lead_table_column_order.index("fwdIter")
@@ -274,9 +288,6 @@ def render_igv():
 def send_js(path):
     return send_from_directory(PATHS['igv_repo_dir'], path)
 
-@app.route('/bootstrapTableDir/<path:path>')
-def send_bootstrap_table_dir(path):
-    return send_from_directory(PATHS['bootstrap_tables_dir'], path)
 
 @app.route('/prototable/<path:path>')
 def send_prototable(path):
@@ -291,10 +302,9 @@ def get_epi_tracks():
 def epi_tracks(path):
     return send_from_directory(PATHS['epi_dir'], path)
 
-
-
-lead_eqtls = LeadEqtls(PATHS['lead_eqtl_table'])
-sub_eqtls = {}
+@app.route('/static_files/<path:path>')
+def static_files(path):
+    return send_from_directory(pkg_resources.resource_filename("ebrowse", "static_files"), path)
 
 if __name__ == '__main__':
     app.run(port=PATHS['flask_port'])
