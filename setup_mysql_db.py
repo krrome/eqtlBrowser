@@ -120,8 +120,12 @@ cd /nfs/research1/stegle/users/rkreuzhu/conda-envs/ebrowser/mysql-test ; perl my
 #mysql --socket /nfs/research1/stegle/users/rkreuzhu/webapp_data/mysql/socket --port 3306 -u root -p
 # then do:
 "GRANT ALL PRIVILEGES ON *.* TO 'ebrowse'@'localhost' IDENTIFIED BY 'mergedEqtlData';"
+# create the database:
+"CREATE DATABASE eqtldata;"
 # and:
 "quit"
+
+
 
 
 # to shut the server down do

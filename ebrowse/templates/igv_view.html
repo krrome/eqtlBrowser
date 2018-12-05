@@ -1,0 +1,424 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>blood eQTL browser</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+
+    <!-- IGV CSS -->
+    <link rel="stylesheet" type="text/css" href="http://127.0.0.1:8089/igvdir/css/igv.css">
+
+    <!-- Dev CSS -->
+    <link rel="stylesheet" type="text/css" href="http://127.0.0.1:8089/igvdir/dev/css/dev.css">
+
+    <!-- Vendor CSS -->
+    <link rel="stylesheet" type="text/css" href="http://127.0.0.1:8089/igvdir/vendor/fa-svg-with-js.css"/>
+
+    <!-- Vendor JS -->
+    <script src="http://127.0.0.1:8089/igvdir/vendor/jquery-1.12.4.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/vendor/jquery-ui.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/vendor/jquery.mousewheel.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/vendor/underscore.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/vendor/promise.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/vendor/zlib_and_gzip.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/vendor/inflate.js"></script>
+
+    <!-- IGV JS -->
+    <script src="http://127.0.0.1:8089/igvdir/js/igv-icons.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/session/igvXmlSession.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/mergedTrack.js"></script>
+
+
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/coverageMap.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/bamReader.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/bamReaderNonIndexed.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/bgzf.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/bamSource.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/bamTrack.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/bamAlignment.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/bamAlignmentRow.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/bamIndex.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/alignmentContainer.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/pairedAlignment.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/bamUtils.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/bamWebserviceReader.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/htsgetReader.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bam/alignmentBlock.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/bigQuery/ccp.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/bigwig/bufferedReader.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bigwig/bwReader.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/bigwig/bwSource.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/encode/encodeDataSource.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/featureCache.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/gffHelper.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/featureSource.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/featureParsers.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/tribble.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/featureFileReader.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/customServiceReader.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/aneuSource.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/aneuTrack.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/featureTrack.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/wigTrack.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/featureUtils.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/segParser.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/segTrack.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/feature/dataWrapper.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/ga4gh/ga4ghAlignmentReader.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ga4gh/ga4ghVariantReader.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ga4gh/ga4ghHelper.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ga4gh/googleUtils.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/gtex/eqtlTrack.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/gtex/gtexFileReader.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/gtex/gtexReader.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/gtex/gtex.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/gtex/immvarReader.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/eqtl/bloodEqtlTrack.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/eqtl/eqtlReader.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/eqtl/bloodSignalEqtlTrack.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/eqtl/bloodSignalEqtlReader.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/gwas/t2dVariantSource.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/gwas/gwasTrack.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/karyo/karyo.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/oauth/google.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/tdf/tdfReader.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/tdf/tdfSource.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/ui/trackMenuPopupDialog.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ui/dataRangeDialog.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ui/inputDialog.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ui/trackRemovalDialog.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ui/alertDialog.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ui/cursorGuide.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ui/centerGuide.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ui/trackLabelControl.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ui/userFeedback.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ui/alertDialog.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ui/popover.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ui/chromosomeSelectWidget.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/variant/vcfParser.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/variant/variant.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/variant/variantTrack.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/sampleInformation.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/igv-create.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/browser.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ideogram.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/windowSizePanel.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/referenceFrame.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/igv-canvas.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/genome.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/trackView.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/viewport.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/rulerTrack.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/rulerSweeper.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/igv-math.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/igv-color.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/igv-utils.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/parseUtils.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/fasta.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/sequenceTrack.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/igv-exts.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/igvxhr.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/binary.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/intervalTree.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/trackCore.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/ui/fileLoadWidget.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/set.js"></script>
+
+    <script src="http://127.0.0.1:8089/igvdir/js/roi.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/js/roiSource.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/vendor/tdigest.js"></script>
+    <script src="http://127.0.0.1:8089/igvdir/vendor/rbtree.js"></script>
+
+    <script type="text/javascript">
+
+    igv_eqtl_baseurl = 'http://127.0.0.1:{{ port }}/';
+    table_ajax_url = igv_eqtl_baseurl;
+
+
+    create_lead_track = function(cellType, dataset){
+        igv.browser.loadTrack({
+                         type: 'bloodeqtl',
+                         sourceType: 'bloodeqtl',
+                         url: igv_eqtl_baseurl,
+                         dataset: dataset,
+                         cellType: cellType,
+                         name: cellType + ' blood eQTL data',
+                         });
+    };
+
+
+     create_track= function(variant, probeId, fwdIter, cellType, dataset, hgnc, var_chrom="", var_pos=0){
+        igv.browser.loadTrack({
+                         type: 'bloodsignaleqtl',
+                         sourceType: 'bloodsignaleqtl',
+                         url: igv_eqtl_baseurl,
+                         queryVarId:variant,
+                         queryProbeId:probeId,
+                         fwdIter:fwdIter,
+                         cellType: cellType,
+                         name: cellType+': ' + hgnc + '(' + probeId + '): ' + variant,
+                         dataset: dataset,
+                         });
+        if ((var_chrom != "") && (var_pos != 0)){
+            igv.browser.goto(var_chrom, var_pos-10000, var_pos+10000);
+        }
+
+    };
+
+    create_track_alert = function(variant, probeId, fwdIter, cellType){
+        alert([variant, probeId, fwdIter, cellType]);
+    };
+
+
+    var default_track_setup = {name: 'Brain - Cerebellar Hemisphere',
+                         visibilityWindow: 200000}
+
+    create_epi_tracks = function(cellType){
+        $.getJSON( igv_eqtl_baseurl + 'get_epi_tracks?cellType='+cellType, function( data ) {
+
+            for (i in data){
+                igv.browser.loadTrack(data[i]);
+            };
+          //$.each( data, function( inner_dict ) {
+          //  config = {name: inner_dict.name, type: inner_dict.type, height: inner_dict.height, url: inner_dict.url};
+          //  igv.browser.loadTrack(config);
+          //});
+        });
+
+    };
+
+    </script>
+
+
+
+    <script type="text/javascript">
+
+    $(document).ready(function () {
+
+        var div,
+                options,
+                browser;
+
+        div = $("#igv_div")[0];
+        options = {
+            genome: "hg19",
+            showNavigation: true,
+            fastaURL: 'https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg19/hg19.fasta',
+            cytobandURL: 'https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg19/cytoBand.txt',
+            // locus: 'SLC25A3',
+            locus: 'rs28372744',
+            // locus: ['egfr', 'myc', 'pten'],
+            // locus: ['2', '4', '8'],
+            flanking: 7500,
+            //locus: 'SLC25A3',
+            locus: 'chr1:241461541-249250621',
+            // locus: ['egfr', 'myc', 'pten'],
+            // locus: ['2', '4', '8'],
+            formats: {
+                gwasSNPS: {
+                    coords: 0,
+                    chr: 0,
+                    start: 1,
+                    end: 2,
+                    fields: ["chrom", "chromStart", "chromEnd", "Strongest SNP-risk allele", "Disease/Phenotype", "P-value", "Odds ratio or beta", "PUBMEDID"]
+                }
+            },
+            tracks: [
+                {
+                     type: 'bloodeqtl',
+                     sourceType: 'bloodeqtl',
+                     url: igv_eqtl_baseurl,
+                     dataset: 'merged',
+                     cellType: 'CD14',
+                     name: 'CD14 blood eQTL data',
+                },
+                {
+                    featureType: 'genes',
+                    url: 'http://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg19/genes/gencode.v18.collapsed.bed',
+                    name: 'Genes',
+                    order: 10000,
+                    displayMode: 'EXPANDED',
+                    height: 100,
+                    autoHeight: true,
+                    removable: false,
+                    labelDisplayMode: 'SLANT'
+                }
+            ]
+        };
+
+        browser = igv.createBrowser(div, options);
+
+
+
+        // igv.browser.search("psphp1");
+    });
+
+
+    </script>
+
+    <style type="text/css">
+        /* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1001; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+    -webkit-border-radius: 5px !important;
+    -moz-border-radius: 5px !important;
+    border-radius: 5px !important;
+}
+
+/* The Close Button */
+.close-filePicker {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+.filePicker-title {
+    color: #aaa;
+    float: left;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-filePicker:hover,
+.close-filePicker:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+    </style>
+
+</head>
+<body>
+
+
+<!-- Trigger/Open The Modal -->
+<button id="filePickerModalBtn">Add file to browser...</button>
+
+<!-- The Modal -->
+<div id="filePicker" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close-filePicker">&times;</span>
+      <h1 class="filePicker-title">Add file...</h1>
+      <br /><br /><br /><br />
+        <p>Select input file: <input type="file" id="new_file" name="files[]" /></p>
+        <p>If this file has an index file (.idx, .bai, ...) select it here: <input type="file" id="new_idxfile" name="files[]" /></p>
+      <button id="filePickerCancelBtn">Cancel</button>
+      <button id="filePickerAddBtn">Add</button>
+  </div>
+
+</div>
+
+
+<script type="text/javascript">
+    // Get the modal
+var file_picker_modal = document.getElementById('filePicker');
+
+// Get the button that opens the modal
+var file_picker_modal_btn = document.getElementById("filePickerModalBtn");
+
+// Get the <span> element that closes the modal
+var close_file_picker = document.getElementsByClassName("close-filePicker")[0];
+
+// When the user clicks on the button, open the modal
+file_picker_modal_btn.onclick = function() {
+    file_picker_modal.style.display = "block";
+}
+
+
+
+function cancel_file_picker(evt){
+    new_file = document.getElementById("new_file");
+    new_idxfile = document.getElementById("new_idxfile");
+    files = [new_file, new_idxfile]
+    for (i in files){
+        try{
+            files[i].value = '';
+            if(files[i].value){
+                files[i].type = "text";
+                files[i].type = "file";
+            }
+        }catch(e){}
+    }
+    file_picker_modal.style.display = "none";
+}
+
+function add_file_picker(evt){
+    new_file = document.getElementById("new_file");
+    new_idxfile = document.getElementById("new_idxfile");
+
+    track_data = {url: new_file.files[0]};
+    if (new_idxfile.value != ''){
+        track_data['indexURL'] = new_idxfile.files[0];
+    }
+
+    igv.browser.loadTrack(track_data);
+    cancel_file_picker(evt);
+}
+
+
+document.getElementById('filePickerCancelBtn').addEventListener('click', cancel_file_picker, false);
+document.getElementById('filePickerAddBtn').addEventListener('click', add_file_picker, false);
+
+// When the user clicks on <close_file_picker> (x), close the modal
+close_file_picker.onclick = function() {
+    file_picker_modal.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+    if (event.target == file_picker_modal) {
+        file_picker_modal.style.display = "none";
+    }
+}
+</script>
+
+
+<div id="igv_div" style="padding-top: 50px;padding-bottom: 20px; height: auto"></div>
+
+</body>
+</html>

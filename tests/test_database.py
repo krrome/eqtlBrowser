@@ -1,4 +1,4 @@
-from ebrowse.database import get_leads_query, session, LeadEqtlResult
+from ebrowse.database import get_leads_query, session, LeadEqtlResult, string_keys_lead
 import numpy as np
 
 def assert_dict_equality(a,b):
@@ -31,6 +31,13 @@ def test_get_leads_query():
     r_eq = q_eq.all()
     assert all([el.geneSymbol == query_gene_symbol for el in r_eq])
 
+    # Test filter_all
+    query_strs = ["ABCC", "2230", "6:T:C", "D4"]
+    for query_str in query_strs:
+        q_abbc = get_leads_query(filter_equals_any=query_str)
+        print(q_abbc.count())
+        assert all([any([query_str in getattr(el, k) for k in string_keys_lead]) for el in q_abbc])
+
 
     # Test ordering
     from sqlalchemy import func, desc
@@ -45,3 +52,9 @@ def test_get_leads_query():
     assert (pvs_asc[np.argsort(pvs_asc)] == pvs_asc).all()
     assert (pvs_desc[np.argsort(pvs_desc)[::-1]] == pvs_desc).all()
 
+    # Test get counts
+    rv = get_leads_query(per_page=5, add_counts=True)
+    assert isinstance(rv, tuple)
+    assert len(rv) == 3
+    assert isinstance(rv[1], int)
+    assert isinstance(rv[2], int)

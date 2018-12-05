@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>blod eQTL browser</title>
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+
+
+    <script type="text/javascript">
+
+    igv_eqtl_baseurl = 'http://127.0.0.1:{{ port }}/';
+    table_ajax_url = igv_eqtl_baseurl;
+
+
+    create_track = function(variant, probeId, fwdIter, cellType){
+        igv.browser.loadTrack({
+                         type: 'bloodsignaleqtl',
+                         sourceType: 'bloodsignaleqtl',
+                         url: igv_eqtl_baseurl,
+                         queryVarId:variant,
+                         queryProbeId:probeId,
+                         fwdIter:fwdIter,
+                         name: cellType+' eqtl',
+                         });
+    };
+
+    create_track_alert = function(variant, probeId, fwdIter, cellType){
+        alert([variant, probeId, fwdIter, cellType]);
+    };
+
+    </script>
+
+    <script>
+    $(document).ready(function() {
+    $('#table_id').DataTable( {
+        "processing": true,
+        "serverSide": true,
+        "ajax": table_ajax_url+"lead_table",
+        "columnDefs": [ {
+            "targets": '_all',
+            "render": function ( data, type, row, meta ) {
+                variant = row[{{ var_id_col }}];
+                probeId = row[{{ probe_id_col }}];
+                fwdIter = row[{{ fwd_iter_col }}];
+                cellType = row[{{ cell_type_col }}];
+              return '<div onclick="create_track_alert(\''+variant+'\', \''+probeId+'\', \''+fwdIter+'\', \''+cellType+'\')">'+data+'</div>';
+            }
+          } ]
+        } );
+    } );
+    </script>
+
+
+</head>
+<body style="padding:50px 10px ">
+
+<table id="table_id" class="display">
+    <thead>
+        <tr>
+            {% for colname in colnames %}
+            <th>{{ colname }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+
+</body>
+</html>

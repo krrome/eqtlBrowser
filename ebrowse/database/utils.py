@@ -27,6 +27,10 @@ avail_data_full = {"Belgium":["CD14", "CD15", "CD19", "CD4", "CD8", "PLA"], "Oxf
 avail_data = {"Belgium":["CD14", "CD15", "CD19", "CD4", "CD8", "PLA"], "Oxford":["CD14", "CD15", "CD19"], "Inhouse":["PLA"], "Cardiogenics":["CD14", "mac"]}
 mega_data = {"Belgium-Oxford-Inhouse-Cardiogenics":["CD14", "CD15", "CD19", "PLA"], "Belgium":["CD4", "CD8"], "Cardiogenics":["mac"]}
 
+colocalisation_col_renaming = {"chi2_eqtl":"chi2Eqtl","chi2_gwas":"chi2Gwas","compared_in_finemap":"comparedInFinemap","index_eqtl":"indexGroupEqtl",
+ "index_gwas":"indexGroupGwas","pvalues_eqtl":"pvaluesEqtl","pvalues_gwas":"pvaluesGwas","snp":"variantId","snp_prob_eqtl":"snpProbEqtl","snp_prob_gwas":"snpProbGwas"}
+
+
 
 all_singals = True
 
@@ -72,7 +76,8 @@ def get_detailed_results_entry(fh, fh_ld, probeId, fwdIter, cell_type, dataset):
         return None
     ret['beta'] = fh[probeId]['betas_added'][:][fwdIter, :].tolist()
     ret['pValue'] = fh[probeId]['pvadded'][:][fwdIter, :].tolist()
-    ret['snpId'] = fh[probeId]['rs'][:].tolist() # correct this
+    ret['pValue'] = np.clip(fh[probeId]['pvadded'][:][fwdIter, :].tolist(), 1e-310, 1).tolist()
+    ret['snpId'] = [None]*len(ret['pValue'])
     ret['variantId'] = fh[probeId]['rs'][:].tolist()
     snp_sel_lead = assert_valid_objs([ret['variantId'][fh[probeId]['iadded'][:][fwdIter]]])[0]
     ret['ldR2'] = (fh_ld[probeId][snp_sel_lead].values ** 2).tolist()
@@ -83,6 +88,8 @@ def get_detailed_results_entry(fh, fh_ld, probeId, fwdIter, cell_type, dataset):
     ret['fwdIter'] = [str(fwdIter)] * len(ret['beta'])
     ret['cellType'] = [cell_type] * len(ret['beta'])
     ret['dataset'] = [dataset] * len(ret['beta'])
+    ret = pd.DataFrame(ret).query('pValue < 0.05').to_dict("list")
+    #ret['snpId'] = get_rs_ids_batched(ret['variantId'])  # correct this
     ret = {k: assert_valid_objs(v) for k, v in ret.items()}
     return ret
 
@@ -108,10 +115,15 @@ def get_all_results_iter():
     eqtls_df['gene'] = eqtls_df['gene'].astype(str)
     eqtls_df['dataset'] = "merged"
     eqtls_df = eqtls_df[["chrom", "pos", "betas_added", "pvadded", "rsids", "rs", "hgnc", "gene", "fwd_sel_itr",
-                         "cell_type", "dataset", "file"]]
+                         "cell_type", "dataset", "file", "ensembl_gid", "maf", "pv_bonf_BH"]]
     eqtls_df.columns = ["chromosome", "start", "beta", "pValue", "snpId", "variantId", "geneSymbol", "probeId",
-                        "fwdIter", "cellType", "dataset","file"]
-
+                        "fwdIter", "cellType", "dataset","file", "ensembleGId", "AAF", "fdr"]
+    maf= eqtls_df["AAF"].values
+    maf[maf > 0.5] = 1-maf[maf > 0.5]
+    eqtls_df['maf'] = maf
+    eqtls_df = eqtls_df[[c for c in eqtls_df.columns if c != "AAF"]]
+    eqtls_df['pValue'] = np.clip(eqtls_df['pValue'], 1e-310, 1)
+    eqtls_df['cellType'] = eqtls_df['cellType'].replace("PLA", "PLT").replace("mac", "MAC")
     ret = eqtls_df[[c for c in eqtls_df.columns if c != "file"]].to_dict("list")
     ret = {k: assert_valid_objs(v) for k, v in ret.items()}
 
@@ -154,3 +166,112 @@ def get_all_detailed_results():
             ld_file = bpath + "/lead_LDs_%d.hdf5" % j
             fh_ld = h5py.File(ld_file, "r")
             fpath = new_path
+
+
+def get_colocalised_hits():
+    from glob import glob
+    finemaps ={}
+    colocs_ffmt = "/nfs/research1/stegle/users/rkreuzhu/colocalisation_pw/finemap_data/finemap_pp_*.txt"
+    for f in glob(colocs_ffmt):
+        tks = f.split("/")[-1].split(".")[0].split("_")[2:]
+        cell_type = tks[0]
+        trait = "_".join(tks[1:-1])
+        gene = tks[-1]
+        if cell_type not in finemaps:
+            finemaps[cell_type] = {}
+        if gene not in finemaps[cell_type]:
+            finemaps[cell_type][gene] = {}
+        df = pd.read_csv(f, sep="\t")
+        df['cellType'] = cell_type
+        df['probeId'] = gene
+        df['trait'] = trait
+        df.columns = [colocalisation_col_renaming[col] if col in colocalisation_col_renaming else col for col in
+                      df.columns]
+        df = df[[col for col in df.columns if col not in ["snp_log10bf_gwas", "snp_log10bf_eqtl", "pos"]]]
+        coloc_sel = (df["snpProbEqtl"] * df["snpProbGwas"] > 0.5)
+        if coloc_sel.sum() >0:
+            ret = df.loc[coloc_sel]
+            ret = ret.to_dict("list")
+            ret = {k: assert_valid_objs(v) for k, v in ret.items()}
+            yield ret
+
+
+def get_rs_ids(var_ids):
+    import cyvcf2
+    from tqdm import tqdm
+    dbsnp = cyvcf2.VCF("/nfs/research1/stegle/users/rkreuzhu/reference/dbsnp_hg19/All_20180423.vcf.gz")
+    rss = []
+    for var_id in tqdm(var_ids):
+        # var_id = eqtls_df["rs"].iloc[0]
+        if isinstance(var_id, bytes):
+            var_id = var_id.decode()
+        chrom, pos, ref, alt = var_id.split(":")
+        region_str = "{0}:{1}-{2}".format(chrom, str(int(pos) - 1), pos)
+        variants = dbsnp(region_str)
+        rsids = []
+        sel_vars = []
+        for rec in variants:
+            if (str(rec.POS) == pos) and (rec.REF == ref) and (alt in rec.ALT):
+                rsids.append("rs" + str(dict(rec.INFO)['RS']))
+                sel_vars.append(rec)
+        rsids = np.unique(rsids).tolist()
+        if len(rsids) == 0:
+            rsids.append(".")
+        rss.append(",".join(rsids))
+    dbsnp.close()
+    return rss
+
+
+def get_rs_ids_batched(var_ids):
+    import cyvcf2
+    from tqdm import tqdm
+    dbsnp = cyvcf2.VCF("/nfs/research1/stegle/users/rkreuzhu/reference/dbsnp_hg19/All_20180423.vcf.gz")
+    if isinstance(var_ids[0], bytes):
+        var_ids = [var_id.decode() for var_id in var_ids]
+    chroms = [id.split(":")[0] for id in var_ids]
+    pos = [int(id.split(":")[1]) for id in var_ids]
+    import pdb
+    pdb.set_trace()
+    vars = pd.DataFrame({"chrom": chroms, "pos":pos, "ids":var_ids , "rs":[[]]*len(var_ids)})
+    unq_chroms = vars["chrom"].unique()
+    for chrom in tqdm(unq_chroms):
+        df_sel = vars["chrom"] == chrom
+        start, end = vars["pos"].loc[df_sel].min()-1, vars["pos"].loc[df_sel].max()
+        region_str = "{0}:{1}-{2}".format(chrom, str(start), str(end))
+        variants = dbsnp(region_str)
+        for rec in tqdm(variants):
+            for alt in rec.ALT:
+                id_str = "%s:%d:%s:%s"%(rec.CHROM, rec.POS, rec.REF, alt)
+                id_sel = vars["ids"] == id_str
+                if id_sel.any():
+                    vars.loc[id_sel, "rs"].iloc[0].append("rs" + str(dict(rec.INFO)['RS']))
+    import pdb
+    pdb.set_trace()
+    vars["rs_str"] = vars["rs"].apply(lambda x: ",".join(x) if len(x) != 0 else ".")
+    dbsnp.close()
+    return vars["rs_str"].tolist()
+
+
+
+def get_tested_probes():
+    all_tested = pd.read_csv("/nfs/research1/stegle/users/rkreuzhu/webapp_data/all_tested_probes.txt.gz")
+    for i, row in all_tested.iterrows():
+        yield row.to_dict()
+
+def save_all_tested_probes():
+    dfs = []
+    for ds, cell_types in mega_data.items():
+        for cell_type in cell_types:
+            all_tested = get_leads_allsig(ds, cell_type, 2.0)[["gene", "hgnc"]]
+            all_tested.columns = ["probeId", "geneSymbol"]
+            all_tested["cellType"] = cell_type.replace("PLA", "PLT").replace("mac", "MAC")
+            all_tested = all_tested.loc[~all_tested["probeId"].duplicated(),:]
+            dfs.append(all_tested)
+    all_tested = pd.concat(dfs, axis=0)
+    all_tested.to_csv("/nfs/research1/stegle/users/rkreuzhu/webapp_data/all_tested_probes.txt.gz", index=None, compression="gzip")
+
+
+def get_expression_boxplots():
+    # load the mana / ana object and then iterate over the lead results, generate the expression boxplots / export
+    # their data
+    pass

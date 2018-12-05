@@ -1,6 +1,8 @@
 from yaml import load
 import sys
 
+__version__ = '0.1'
+
 def get_local_paths():
     with open("./local_paths.yaml", "r") as ofh:
         config = load(ofh)

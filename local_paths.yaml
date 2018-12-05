@@ -6,7 +6,9 @@ osx_testing:
     sample_subeqtl_ld_data: /Users/roman/PycharmProjects/eqtlBrowser/example_data/lead_LDs_0.hdf5
 ebi_testing:
     lead_eqtl_table: /nfs/research1/stegle/users/rkreuzhu/webapp_data/all_leads_w_rs.txt.gz
-    igv_repo_dir: /Users/roman/igv_development/igv.js/
+    igv_repo_dir: /nfs/research1/stegle/users/rkreuzhu/webapp_data/igv.js/
+    bootstrap_tables_dir: /nfs/research1/stegle/users/rkreuzhu/webapp_data/ebrowser/table_prototyping/bootstrap-table/dist/
+    epi_dir: /nfs/research1/stegle/users/rkreuzhu/webapp_data/epi
     flask_port: 8089
     sample_subeqtl_data: /nfs/research1/stegle/users/rkreuzhu/eqtl3rdgen_fullTransGWAS/Belgium-Oxford-Inhouse-Cardiogenics_PLA_minMAF0.01_covs/CD14_mergedDatasets_Belgium_Oxford_Inhouse_Cardiogenics_0.hdf5
     sample_subeqtl_ld_data: /nfs/research1/stegle/users/rkreuzhu/eqtl3rdgen_fullTransGWAS/Belgium-Oxford-Inhouse-Cardiogenics_PLA_minMAF0.01_covs/lead_LDs_0.hdf5
