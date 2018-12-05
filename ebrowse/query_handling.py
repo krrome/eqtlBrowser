@@ -307,4 +307,4 @@ def static_files(path):
     return send_from_directory(pkg_resources.resource_filename("ebrowse", "static_files"), path)
 
 if __name__ == '__main__':
-    app.run(port=PATHS['flask_port'])
+    app.run(host=PATHS['flask_host'], port=PATHS['flask_port'])
