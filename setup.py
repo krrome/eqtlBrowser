@@ -7,7 +7,6 @@ from distutils.core import setup
 requirements = [
     "future",
     "mongoengine==0.16.1",
-    "zlib",
     "pyyaml",
     "flask==1.0.2",
     "setuptools",
