@@ -22,7 +22,8 @@ app.jinja_loader = jinja2.FileSystemLoader(pkg_resources.resource_filename("ebro
 def get_return_dict():
     return {"format": "0.1"}
 
-global_address = "http://127.0.0.1:%d"%PATHS['flask_port']
+global_address = "http://%s:%d"%(PATHS['flask_host'], PATHS['flask_port'])
+host_path = global_address
 
 
 def split_dict_by(in_dict, split_keys = ["dataset", "cellType"]):
@@ -243,6 +244,7 @@ def get_expr_boxplot():
         query["id"] = id
     else:
         abort(404)
+    query['host_path'] = host_path
     return render_template('scatterplot.html', expr_plot_link = "expr_boxplot_data", **query)
 
 @app.route('/expr_hist')
@@ -250,6 +252,7 @@ def get_expr_hist():
     query = {}
     query["geneSymbol"] = request.args.get('geneSymbol', default=None)
     query["cellType"] = request.args.get('cellType', default=None)
+    query['host_path'] = host_path
     if any([query[k] is None or query[k] == "" for k in query]):
         abort(404)
     return render_template('histogram.html', expr_hist_link="expr_hist_data", **query)
@@ -267,7 +270,7 @@ def get_expr_hist_data():
 
 @app.route('/')
 def index():
-    return render_template('pre_production.html')
+    return render_template('pre_production.html', host_path = host_path)
     var_id_col = lead_table_column_order.index("variantId")
     probe_id_col = lead_table_column_order.index("probeId")
     fwd_iter_col = lead_table_column_order.index("fwdIter")

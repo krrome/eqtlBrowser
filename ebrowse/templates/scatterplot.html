@@ -146,7 +146,7 @@ var tooltip = d3.select("body").append("div")
     .style("opacity", 0);
 
 // load data
-d3.json("http://127.0.0.1:8089/{{ expr_plot_link }}?id={{ id }}", function(json_data) {
+d3.json("{{ host_path }}/{{ expr_plot_link }}?id={{ id }}", function(json_data) {
   // don't want dots overlapping axis, so add in buffer to data domain
 
   data = []

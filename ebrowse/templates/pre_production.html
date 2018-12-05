@@ -12,13 +12,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
 
-    <script src="http://127.0.0.1:8089/static_files/promise.js"></script>
-    <script src="http://127.0.0.1:8089/static_files/zlib_and_gzip.js"></script>
-    <script src="http://127.0.0.1:8089/static_files/inflate.js"></script>
+    <script src="{{ host_path }}/static_files/promise.js"></script>
+    <script src="{{ host_path }}/static_files/zlib_and_gzip.js"></script>
+    <script src="{{ host_path }}/static_files/inflate.js"></script>
 
-    <link rel="stylesheet" type="text/css" href="http://127.0.0.1:8089/static_files/igv.css">
-    <link rel="stylesheet" type="text/css" href="http://127.0.0.1:8089/static_files/fa-svg-with-js.css"/>
-    <script type="text/javascript" src="http://127.0.0.1:8089/static_files/igv.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{ host_path }}/static_files/igv.css">
+    <link rel="stylesheet" type="text/css" href="{{ host_path }}/static_files/fa-svg-with-js.css"/>
+    <script type="text/javascript" src="{{ host_path }}/static_files/igv.js"></script>
 
 	<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="https:/maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
@@ -81,7 +81,7 @@
 
 
    function add_scatter(id) {
-        href = "http://127.0.0.1:8089/expr_boxplot?id="+id;
+        href = "{{ host_path }}/expr_boxplot?id="+id;
         window.open(href);
     }
     
@@ -110,7 +110,7 @@
     <script type="text/javascript">
 
     <!-- TODO:FIX THIS -->
-    igv_eqtl_baseurl = 'http://127.0.0.1:8089/';
+    igv_eqtl_baseurl = '{{ host_path }}/';
     table_ajax_url = igv_eqtl_baseurl;
 
     refresh_eqtl_detail_tracks = function(){
@@ -468,7 +468,7 @@
 
   <h1>Tested genes</h1>
   <table id="tested_genes_table" data-toggle="table"
-       data-url="http://127.0.0.1:8089/tested_probes"
+       data-url="{{ host_path }}/tested_probes"
        data-pagination="true"
        data-side-pagination="server"
        data-sort-name="variantId"
@@ -486,7 +486,7 @@
 
   <h1>Lead variants of eQTLs</h1>
   <table id="lead_table" data-toggle="table"
-       data-url="http://127.0.0.1:8089/new_lead_table"
+       data-url="{{ host_path }}/new_lead_table"
        data-pagination="true"
        data-side-pagination="server"
        data-row-style="rowStyle"

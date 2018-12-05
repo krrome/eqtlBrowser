@@ -54,7 +54,7 @@ var geneLabel = d3.select("body").append("div")
 var query_hgnc = "{{ geneSymbol }}"
 
 
-d3.json("http://127.0.0.1:8089/{{ expr_hist_link }}?cellType={{ cellType }}", function(json_data) {
+d3.json("{{ host_path }}/{{ expr_hist_link }}?cellType={{ cellType }}", function(json_data) {
   //
   var values = json_data.med_expr;
 
