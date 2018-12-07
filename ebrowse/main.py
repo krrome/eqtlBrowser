@@ -231,11 +231,12 @@ def get_epi_tracks():
 def epi_tracks(path):
     return send_from_directory(PATHS['epi_dir'], path)
 
+"""
 # This should also be move to development only.
-@app.route('/static_files/<path:path>')
+@app.route('/static/<path:path>')
 def static_files(path):
-    return send_from_directory(pkg_resources.resource_filename("ebrowse", "static_files"), path)
-
+    return send_from_directory(pkg_resources.resource_filename("ebrowse", "static"), path)
+"""
 if get_exec_condition() != "production":
     @app.route('/lead_table')
     def get_lead_table():
