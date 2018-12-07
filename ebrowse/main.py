@@ -4,6 +4,7 @@ from flask import abort
 from ebrowse import PATHS
 import re
 from collections import OrderedDict
+from ebrowse import get_exec_condition
 from ebrowse.shipping.lead_table import column_order as lead_table_column_order
 from ebrowse.shipping.lead_table import column_labels as lead_table_column_labels
 from ebrowse.shipping.lead_table import relabel_and_order as lead_relabel_and_order
@@ -45,45 +46,32 @@ def split_dict_by(in_dict, split_keys = ["dataset", "cellType"]):
                 ret_subobj[k].append(in_dict[k][row])
     return ret
 
+def dict_to_txt(in_dict, sep="\t", header=True):
+    ks = list(in_dict.keys())
+    if header:
+        yield sep.join(ks) + "\n"
+    for i in range(len(in_dict[ks[0]])):
+        yield sep.join([str(in_dict[k][i]) for k in ks])+ "\n"
 
+def parse_datatable_args(in_dict):
+    ret = {}
+    for k, v in in_dict.items():
+        key_elms = [tk for tk in re.split(r'\[|\]', k) if tk != ""]
+        rec_el = ret
+        for sub_k in key_elms[:-1]:
+            if sub_k not in rec_el:
+                rec_el[sub_k] = {}
+            rec_el = rec_el[sub_k]
+        rec_el[key_elms[-1]] = v
+    return ret
 
-@app.route('/eqtl/<dataset_id>')
-@app.route('/eqtl/<dataset_id>/<high_detail_varid>')
-@app.route('/eqtl/<dataset_id>/<chromosome>/<start>/<end>')
-@app.route('/eqtl/<dataset_id>/<chromosome>/<start>/<end>/<high_detail_varid>')
-def get_lead_eqtl_old(dataset_id, high_detail_varid=None, chromosome=None, start=None, end=None):
-    """
-    :param dataset_id: dataset identifier. e.g.: "CD14_WTCHG"
-    :param high_detail_varid: "_".join([probe_id, variant_id, fwd_iter])
-    :param chromosome: string, no "chr"
-    :param start: integer
-    :param end: integer
-    :return: 
-    """
-    if (chromosome is not None) and (start is not None) and (end is not None):
-        try:
-            start = int(start)
-            end = int(end)
-        except Exception:
-            return jsonify(None)
-    ret = get_lead_by_region(chromosome, start, end)
+def parse_datatable_order(order_dict, column_labels):
+    ret_order_dict = OrderedDict()
+    for k in range(len(order_dict.keys())):
+        v = order_dict[str(k)]
+        ret_order_dict[column_labels[int(v['column'])]] = v['dir'].upper()
+    return ret_order_dict
 
-    #if ret['ldR2'] is not None and isinstance(ret['ldR2'], list):
-    #    if all([el is None for el in ret['ldR2']]):
-    #        ret['ldR2'] = None
-    dict_out = get_return_dict()
-    dict_out['lead_eqtl'] = {dataset_id: ret}
-    if high_detail_varid is not None:
-        probe_id, variant_id, fwd_iter  = high_detail_varid.split("_")
-        if dataset_id not in sub_eqtls:
-            sub_eqtls[dataset_id] = SubEqtls(dataset_id)
-        detail_ret = sub_eqtls[dataset_id].get(variant_id, probe_id, fwd_iter)
-        if detail_ret is not None:
-            if detail_ret['ldR2'] is not None and isinstance(detail_ret['ldR2'], list):
-                if all([el is None for el in detail_ret['ldR2']]):
-                    detail_ret['ldR2'] = None
-            dict_out['detailed_eqtl'] = {dataset_id: {variant_id: {probe_id: {fwd_iter: detail_ret}}}}
-    return jsonify(dict_out)
 
 @app.route('/eqtl')
 def get_lead_eqtl():
@@ -105,33 +93,6 @@ def get_lead_eqtl():
     #dict_out['lead_eqtl'] = {"bla":ret}
     return jsonify(dict_out)
 
-
-# the all_eqtl has to be integrated into the lead_eqtl query as a single probe_variant identifier.
-# in igv in the pop-up it is necessary to add a "link" that will set a flag to request the probe_variant and reload the track.
-# the detailed_eqtl eqtls are then parsed individually and coloured if possible.
-
-@app.route('/all_eqtl/<dataset_id>/<variantId>/<probeId>/<fwdIter>')
-def get_sub_eqtl(dataset_id, variantId, probeId, fwdIter):
-    #if dataset_id not in sub_eqtls:
-    #    sub_eqtls[dataset_id] = SubEqtls(dataset_id)
-    #ret = sub_eqtls[dataset_id].get(variantId, probeId, fwdIter)
-    ret = get_detailed(cell_type="CD14", variant_id=variantId, probe_id=probeId, fwd_iter=fwdIter)
-    if ret is None:
-        return jsonify(None)
-    if isinstance(ret['ldR2'], list):
-        if all([el is None for el in ret['ldR2']]):
-            ret['ldR2'] = None
-    dict_out = get_return_dict()
-    dict_out['detailed_eqtl'] = {dataset_id:{variantId:{probeId:{fwdIter:ret}}}}
-    return jsonify(dict_out)
-
-
-def dict_to_txt(in_dict, sep="\t", header=True):
-    ks = list(in_dict.keys())
-    if header:
-        yield sep.join(ks) + "\n"
-    for i in range(len(in_dict[ks[0]])):
-        yield sep.join([str(in_dict[k][i]) for k in ks])+ "\n"
 
 @app.route('/all_eqtl')
 def get_sub_eqtl_get():
@@ -179,46 +140,6 @@ def get_tested_probes_table():
     ret = lead_bootstrap_formatting(results, all_entries, num_filtered, reply_to_search = True)
     return jsonify(ret)
 
-
-def parse_datatable_args(in_dict):
-    ret = {}
-    for k, v in in_dict.items():
-        key_elms = [tk for tk in re.split(r'\[|\]', k) if tk != ""]
-        rec_el = ret
-        for sub_k in key_elms[:-1]:
-            if sub_k not in rec_el:
-                rec_el[sub_k] = {}
-            rec_el = rec_el[sub_k]
-        rec_el[key_elms[-1]] = v
-    return ret
-
-def parse_datatable_order(order_dict, column_labels):
-    ret_order_dict = OrderedDict()
-    for k in range(len(order_dict.keys())):
-        v = order_dict[str(k)]
-        ret_order_dict[column_labels[int(v['column'])]] = v['dir'].upper()
-    return ret_order_dict
-
-
-@app.route('/lead_table')
-def get_lead_table():
-    args_dict = parse_datatable_args(request.args)
-    # most of the args_dict can be ignored: only relevant is
-    entries_per_page = int(args_dict['length'])
-    draw_key = int(args_dict['draw'])
-    order = parse_datatable_order(args_dict['order'], lead_table_column_order)
-    search_str = args_dict['search']['value']
-    search_is_regex = args_dict['search']['regex'] == 'true'
-    start = int(args_dict['start'])
-    args_to_search = {"order_by": order, 'offset': start, 'per_page': entries_per_page}
-
-    if search_str != "":
-        args_to_search["filter_equals_any"] = search_str
-
-    lead_results, all_entries, num_filtered = get_leads(**args_to_search)
-    lead_results_ordered = lead_relabel_and_order(lead_results)
-    ret = lead_table_formatting(lead_results_ordered, draw_key, all_entries, num_filtered)
-    return jsonify(ret)
 
 
 @app.route('/new_lead_table')
@@ -301,20 +222,6 @@ def index():
 def about_page():
     return render_template('info_page.html', host_path = host_path)
 
-@app.route('/igv')
-def render_igv():
-    return render_template('igv_view.html', port=PATHS['flask_port'])
-
-
-@app.route('/igvdir/<path:path>')
-def send_js(path):
-    return send_from_directory(PATHS['igv_repo_dir'], path)
-
-
-@app.route('/prototable/<path:path>')
-def send_prototable(path):
-    return send_from_directory("/nfs/research1/stegle/users/rkreuzhu/webapp_data/ebrowser/table_prototyping", path)
-
 @app.route('/get_epi_tracks')
 def get_epi_tracks():
     cell_type = request.args.get('cellType', default="")
@@ -324,9 +231,46 @@ def get_epi_tracks():
 def epi_tracks(path):
     return send_from_directory(PATHS['epi_dir'], path)
 
+# This should also be move to development only.
 @app.route('/static_files/<path:path>')
 def static_files(path):
     return send_from_directory(pkg_resources.resource_filename("ebrowse", "static_files"), path)
+
+if get_exec_condition() != "production":
+    @app.route('/lead_table')
+    def get_lead_table():
+        args_dict = parse_datatable_args(request.args)
+        # most of the args_dict can be ignored: only relevant is
+        entries_per_page = int(args_dict['length'])
+        draw_key = int(args_dict['draw'])
+        order = parse_datatable_order(args_dict['order'], lead_table_column_order)
+        search_str = args_dict['search']['value']
+        search_is_regex = args_dict['search']['regex'] == 'true'
+        start = int(args_dict['start'])
+        args_to_search = {"order_by": order, 'offset': start, 'per_page': entries_per_page}
+
+        if search_str != "":
+            args_to_search["filter_equals_any"] = search_str
+
+        lead_results, all_entries, num_filtered = get_leads(**args_to_search)
+        lead_results_ordered = lead_relabel_and_order(lead_results)
+        ret = lead_table_formatting(lead_results_ordered, draw_key, all_entries, num_filtered)
+        return jsonify(ret)
+
+
+    @app.route('/igv')
+    def render_igv():
+        return render_template('igv_view.html', port=PATHS['flask_port'])
+
+
+    @app.route('/igvdir/<path:path>')
+    def send_js(path):
+        return send_from_directory(PATHS['igv_repo_dir'], path)
+
+
+    @app.route('/prototable/<path:path>')
+    def send_prototable(path):
+        return send_from_directory("/nfs/research1/stegle/users/rkreuzhu/webapp_data/ebrowser/table_prototyping", path)
 
 if __name__ == '__main__':
     app.run(host=PATHS['flask_host'], port=PATHS['flask_port'])
