@@ -6,6 +6,10 @@ body {
   font: 10px sans-serif;
 }
 
+text {
+  font: 10px sans-serif;
+}
+
 .bar rect {
   shape-rendering: crispEdges;
 }
@@ -36,7 +40,10 @@ body {
 
 </style>
 <body>
+<a id="download_png" href="#">Download PNG</a> <a id="download_svg" href="#">Download SVG</a>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
 <script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="https://rawgit.com/exupero/saveSvgAsPng/gh-pages/src/saveSvgAsPng.js"></script>
 <script>
 // Taken from: http://bl.ocks.org/nnattawat/8916402
 
@@ -183,6 +190,13 @@ d3.json("{{ host_path }}/{{ expr_hist_link }}?cellType={{ cellType }}", function
       .attr("dy", ".71em")
       .style("text-anchor", "end")
       .text("Frequency");
+
+  $("#download_png").click(function(e){
+    saveSvgAsPng(d3.select("svg").node(), "histogram.png", {backgroundColor: "white"});
+  });
+  $("#download_svg").click(function(e){
+    saveSvg(d3.select("svg").node(), "histogram.svg");
+  });
 });
 
 </script>

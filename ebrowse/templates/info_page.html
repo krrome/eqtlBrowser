@@ -55,9 +55,13 @@
 	function rowStyle(row, index) {
 	  if (window.eqtl_detail_tracks.indexOf(row.id) != -1) {
 	    return {
-	      classes: 'text-nowrap another-class ' + row.cellType + "_ct_tag"
+	      classes: 'text-nowrap another-class',
+	      css: {"background-color": "#b2ad7f"}
 	    };
 	  } else {
+	    if (row.hasOwnProperty("my_hidden_id") && row["my_hidden_id"] == "gajhsdg7"){
+	      return {css: {"color": "green", "font-size": "15px"}}
+	    }
 	    return {};
 	  }
 
@@ -77,7 +81,7 @@
 
 
    function add_scatter(id) {
-        href = "{{ host_path }}/expr_boxplot?id="+id;
+        href = "http://127.0.0.1:8089/expr_boxplot?id="+id;
         window.open(href);
     }
     
@@ -105,7 +109,8 @@
 
     <script type="text/javascript">
 
-    igv_eqtl_baseurl = '{{ host_path }}/';
+    <!-- TODO:FIX THIS -->
+    igv_eqtl_baseurl = 'http://127.0.0.1:8089/';
     table_ajax_url = igv_eqtl_baseurl;
 
     refresh_eqtl_detail_tracks = function(){
@@ -131,7 +136,6 @@
                          dataset: dataset,
                          cellType: cellType,
                          name: cellType + ' blood eQTL data',
-                         labelFormatter: track_label_formatter,
                          });
     };
 
@@ -166,9 +170,7 @@
                          sourceType: 'bloodsignaleqtl',
                          url: igv_eqtl_baseurl,
                          id:id,
-                         cellType:cellType,
                          name: cellType+': ' + hgnc + ' (' + probeId + '): ' + variant,
-                         labelFormatter: track_label_formatter,
                          });
         if ((var_chrom != "") && (var_pos != 0)){
             igv.browser.goto(var_chrom, var_pos-10000, var_pos+10000);
@@ -203,48 +205,7 @@
 
     <script type="text/javascript">
 
-    update_table_menu = function(id){
-    	menu_item = $("#"+id)
-    	target = menu_item.attr("data-target");
-    	if ($(target).is(":visible")) {
-    		menu_item.html("<span class=\"glyphicon glyphicon-ok\"></span> "+menu_item.attr("text-content"));
-    	} else {
-    		menu_item.html(menu_item.attr("text-content"));
-    	}
-    }
-
-    track_label_formatter = function(label_obj, track){
-    	label_obj.addClass(track.config.cellType + "_ct_tag")
-    }
-
     $(document).ready(function () {
-
-    	//
-    	$(".table_menuitem").click(function(e){
-    		menu_item = $("#"+e.target.id)
-    		target = menu_item.attr("data-target");
-    		if ($(target).is(":visible")) {
-    			$(target).hide();
-	    	} else {
-	    		$(target).show();
-	    	}
-	    	update_table_menu(e.target.id);
-    	})
-
-
-    	$("#load_file_menu").click(function(e){
-    		document.getElementById('filePicker').style.display = "block";
-    	});
-
-    	// hide the tested genes table
-    	$("#tested_genes_table_cont").hide();
-
-    	// update the menu
-    	$(".table_menuitem").each(function(){
-    		update_table_menu(this.id);
-    	})
-
-
 
         var div,
                 options,
@@ -262,7 +223,7 @@
             // locus: ['2', '4', '8'],
             flanking: 7500,
             //locus: 'SLC25A3',
-            locus: 'all',
+            locus: 'chr1:241461541-249250621',
             // locus: ['egfr', 'myc', 'pten'],
             // locus: ['2', '4', '8'],
             formats: {
@@ -286,7 +247,7 @@
                 {
                     featureType: 'genes',
                     url: 'http://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg19/genes/gencode.v18.collapsed.bed',
-                    name: 'Gencode v.18 genes',
+                    name: 'Genes',
                     order: 10000,
                     displayMode: 'EXPANDED',
                     height: 100,
@@ -332,7 +293,6 @@
 	            }
 	        }catch(e){}
 	    }
-	    var file_picker_modal = document.getElementById('filePicker');
 	    file_picker_modal.style.display = "none";
 	}
 
@@ -360,6 +320,10 @@
 		// Get the <span> element that closes the modal
 		var close_file_picker = document.getElementsByClassName("close-filePicker")[0];
 
+		// When the user clicks on the button, open the modal
+		file_picker_modal_btn.onclick = function() {
+		    file_picker_modal.style.display = "block";
+		}
 
 		document.getElementById('filePickerCancelBtn').addEventListener('click', cancel_file_picker, false);
 		document.getElementById('filePickerAddBtn').addEventListener('click', add_file_picker, false);
@@ -425,42 +389,6 @@
     text-decoration: none;
     cursor: pointer;
 }
-
-.PLT_ct_tag{
-	color: #861B23;
-	background-color: #D77078;
-}
-
-.CD4_ct_tag{
-	color: #5E3003;
-	background-color: #DDA873;
-}
-
-.CD8_ct_tag{
-	color: #5E4F03;
-	background-color: #DDCB73;
-}
-
-.CD14_ct_tag{
-	color: #3F5903;
-	background-color: #B2CF6D;
-}
-
-.MAC_ct_tag{
-	color: #024B02;
-	background-color: #5CB05C;
-}
-
-.CD15_ct_tag{
-	color: #052A3C;
-	background-color: #4C778C;
-}
-
-.CD19_ct_tag{
-	color: #160941;
-	background-color: #665898;
-}
-
     </style>
 <!-- end IGV deps -->
 
@@ -480,112 +408,110 @@
 		        <span class="icon-bar"></span>
 		        <span class="icon-bar"></span>
 		      </button>
-		      <a class="navbar-brand" href="#">Blood eQTL browser</a>
+		      <a class="navbar-brand" href="{{ host_path }}/">Blood eQTL browser</a>
 		    </div>
-
-		    <!-- Collect the nav links, forms, and other content for toggling -->
-		    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-		      <ul class="nav navbar-nav">
-		        <li class="dropdown">
-		          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Tables<span class="caret"></span></a>
-		          <ul class="dropdown-menu" role="menu">
-		            <li><a href="#" id="tested_genes_menu" data-target="#tested_genes_table_cont" class="table_menuitem" text-content="Tested genes">Tested genes</a></li>
-		            <li><a href="#" id="lead_eqtls_menu" data-target="#lead_table_cont" class="table_menuitem" text-content="Lead eQTL variants">Lead eQTL variants</a></li>
-		          </ul>
-		        </li>
-		        <li class="dropdown">
-		          <a href="#" class="dropdown-toggle" data-toggle="dropdown">Genome Browser<span class="caret"></span></a>
-		          <ul class="dropdown-menu" role="menu">
-		            <li><a href="#" id="load_file_menu" data-target="#filePicker" class="gb_menuitem" tabindex="-1">Load local file...</a></li>
-		            <li class="divider"></li>
-					  {% for cell_type in cell_types %}
-					  <li><a href="#genome_browser" onclick="create_lead_track('{{ cell_type }}', 'merged')">{{ cell_type }} lead eQTLs</a></li>
-					  {% endfor %}
-		            <li class="divider"></li>
-					  {% for cell_type in cell_types %}
-					  <li><a href="#genome_browser" onclick="create_epi_tracks('{{ cell_type }}')">{{ cell_type }} epigenetic annotation</a></li>
-                      {% endfor %}
-		          </ul>
-		        </li>
-		        <li><a href="{{ host_path }}/about">Info</a></li>
-		      </ul>
-		    </div><!-- /.navbar-collapse -->
 		  </div><!-- /.container-fluid -->
 		</nav>
  	</header>
 
+  <h1>About this resource</h1>
+  <p>This website offers visualisations of eQTL results published in (DOI goes here). Yet the primary aim of this website is to display eQTL results, the IGV genome browser offers the functionality to display also local files. Additionally, you can display your own results from a GWAS or eQTL association test in a similar way as with LocusZoom, but interactively.</p>
+
+  <p><b>Warning:</b> The genome browser and all results are defined in reference genome <b>hg19</b>. This means that all the local files that are loaded by the user <b>must</b> be in hg19.</p>
+
+  <h2>Display elements</h2>
+  <h3>Tables</h3>
+  <p>All tables can be filtered by column. Columns with numerical entries such as p-values may start with &quot;&lt;&quot;, &quot;&gt;&quot;, &quot;&lt;=&quot;, or &quot;&gt;=&quot; followed by a numerical value. Ranges are currently not supported.</p>
+  <h4>Tested probes</h4>
+  <p>This table displays all the probes and their gene symbols that were tested in the eQTL test. This is relevant if in the &quot;Lead variants of eQTLs&quot; there is no entry for a certain gene. As a &quot;no eQTL was found&quot; result is different from &quot;this gene has not been tested&quot;. </p>
+  <h4>Lead variants of eQTLs</h4>
+  <p>This table displays all eQTL associations at an FDR&lt;0.01. The eQTL test was performed using a stepwise conditional analysis - the &quot;Indep. sig.&quot; column displays the round of forward selection this association stems from; a 0 therefore indicates a primary association, a 1 the result from an association test conditioning on the association found for the same probe in iteration &quot;0&quot;, etc.</p>
+
+  <p>On the left hand side functions for inspection of this association offered:
+    <ul>
+        <li><span class="glyphicon glyphicon-search" aria-hidden="true"></span> Zooms the genome browser to the location of the lead variant in the row.</li>
+        <li><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Display the full summary statistic of this association in the genome browser.</li>
+        <li><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span> Display transcript levels of the probe segregated by genotype.</li>
+    </ul>
+    If the <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> is clicked the full summary statistic is displayed in the genome browser. All lead eQTL results for which the full summary statistic are displayed are highlighted in color. The color is set by cell type. 
+  </p>
+
+  <h3>Genome browser</h3>
+  <p>The igv.js browser offers similar funcionality as the desktop version of IGV. Here additional functionality has been implemented to display lead eQTL results and full summary statistics in a style similar to <a href="http://locuszoom.org/">LocusZoom</a>. The genome browser here is capable of displaying local files on demand (select: &quot;Genome Browser&quot; &gt; &quot;Load local file...&quot;) to do so. Some files, such as .bam files have an index as a companion file, which is required for display and has to be defined in the file dialog.</p>
+
+  <p>The lead eQTL results displayed in the &quot;Lead variants of eQTLs&quot; table can also be visualised in the genome browser by selecting &quot;Genome Browser&quot; &gt; &quot;&lt;cell type&gt; lead eQTLs&quot;. In the lead eQTL track displayed in the genome browser the user can click on every assocation (displayed as dot). When clicking on one of the dots click &quot;Load details&quot; which has the same effect as clicking the <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> in the &quot;Lead variants of eQTLs&quot; table.</p>
+
+  <p>Epigenetic annotation tracks for cell types can be added in order to interpret results with regard to regulatory relevant genomic regions. To add the tracks select &quot;Genome Browser&quot; &gt; &quot;Epigenetic annotation &lt;cell type&gt;&quot;</p>
+
+  <h4>Plot your own summary statistics data</h4>
+  <p>Apart from standard bioinformatics formats supported by IGV, an additional file format has been implemented to generate aforementioned LocusZoom-like visualisation from user's data. The input file for that is a plain text file, but its name must end with &quot;.signal&quot;. Its content is a tab-delimited text file in the following format:</p>
+
+  <ul>
+    <li>The file can (not required) have the following comment at the very top: &quot;#lead &lt;variantId&gt;&quot; with &lt;variantId&gt; being one of the entries in the variantId column.</li>
+    <li>The file has a column header, hence it is not necessary to keep the column order and only a subset of columns can be defined.</li>
+    <li>The following columns are required:</li>
+    <ul>
+        <li><b>chromosome</b> chromosome of the variant</li>
+        <li><b>start</b> ariant start position, 1-based</li>
+        <li><b>variantId</b> unique variant id, e.g: chr14:627362:A:G</li>
+        <li><b>pValue</b> Nominal association p-value. If this is a result from a stepwise conditional analysis (see column &apos;fwdIter&apos;) then the p-value has to come from that analysis.</li>
+        <li><b>ldR2</b> Pairwise linkeage disequilirium r<sup>2</sup> (aka coefficient of determination) between the variant in this row and the variant defined as &apos;lead&apos;. The &apos;lead&apos; variant is either defined in the file header (&apos;#lead&apos; comment) or in the column &apos;queryVarId&apos;.</li>
+    </ul>
+    <li>Optional additional columns that are then displayed in the info tags:</li>
+    <ul>
+        <li><b>snpId</b> variant id that is free to choose, preferably rs-ids</li>
+        <li><b>fwdIter</b> indicate whether the lead variant indicated in the &apos;queryVarId&apos; column or in the &apos;#lead&apos; comment was selected from the nth iteration of foward-selection. Where the values in this column are then n</li>
+        <li><b>geneSymbol</b> only relevant for eQTL tests: associated gene</li>
+        <li><b>beta</b> effect size with respect to non-reference</li>
+        <li><b>probeId</b> only relevant for array-based eQTL tests: associated microarray probe</li>
+        <li><b>cellType</b> Cell type</li>
+        <li><b>dataset</b> some sort of dataset identifier</li>
+        <li><b>trait</b> trait name</li>
+        <li><b>queryVarId</b> all entries in this column have to be the same: The lead variant with respect to which the LD is measured. The variant id in this column has to match one of the entries in the &apos;variantId&apos; column. Instead of specifying this column the &apos;#lead&apos; header comment can be used.</li>
+    </ul>
+    <li>Finally, if the &quot;#lead &lt;variantId&gt;&quot; is not specified in the beginning of the file, then the &quot;queryVarId&quot; column is required!</li>
+  </ul>
+
+  <h3>Presented data</h3>
+  <h4>eQTL data</h4>
+  <p>eQTL data from four studies was re-processed, aggregated prior to analysis. 10 PEER factors were used to account for unwanted variantion in the data.</p>
+
+  <h4>Epigenetic annotation</h4>
+  <p>The epigenetic data has been acquired from:</p>
+  <ul>
+    <li>Ensembl <a href="ftp://ftp.ensembl.org/pub/release-90/regulation/homo_sapiens/RegulatoryFeatureActivity/">regulatory build 90 / hg19</a>:</li>
+    <ul>
+        <li>Segmentation data of the cell types: CD4, CD8, CD14, CD15, CD19, MAC</li>
+    </ul>
+    <li>Petersen et al., 2017 (<a href="https://dx.doi.org/10.1038/ncomms16058">doi:10.1038/ncomms16058</a>)</li>
+    <ul>
+        <li>Segmentation data of the cell type: MK</li>
+        <li>ATAC-seq data of the cell type: MK</li>
+        <li>H3K27ac data of the cell type: MK</li>
+    </ul>
+    <li>Nuernbern et al., 2012 (<a href="https://dx.doi.org/10.1182/blood-2012-01-401893">doi:10.1182/blood-2012-01-401893</a>)</li>
+    <ul>
+        <li>MEIS1 ChIP-seq data of the cell type: MK</li>
+    </ul>
+    <li>Tijssen et al., 2011 (<a href="https://dx.doi.org/10.1016/j.devcel.2011.04.008">doi:10.1016/j.devcel.2011.04.008</a>)</li>
+    <ul>
+        <li>GATA1/2, RUNX1, FLI1, and SCL ChIP-seq data of the cell type: MK</li>
+    </ul>
+    <li>Manuscript in preparation</li>
+    <ul>
+        <li>ATAC-seq data of the cell type: CD4, CD14, CD19</li>
+        <li>H3K27ac data of the cell type: CD4, CD8, CD14, CD15, CD19, MAC</li>
+        <li>Super enhancer data of the cell type: MK, CD4, CD8, CD14, CD15, CD19, MAC</li>
+        <li>Super enhancer constituent data of the cell type: MK, CD4, CD14, CD19</li>
+        <li>CTCF ChIP-seq data of the cell type: CD14, CD19</li>
+    </ul>
+  </ul>
 
 
+  <h2>Using the REST API</h2>
+  <p>REST queries can be used to download data as it is displayed. More details on this will be added.</p>
 
 
- <div id="tested_genes_table_cont">
-  <h1>Tested genes</h1>
-  <table id="tested_genes_table" data-toggle="table"
-       data-url="{{ host_path }}/tested_probes"
-       data-pagination="true"
-       data-side-pagination="server"
-       data-sort-name="variantId"
-       data-toggle="table"
-       data-filter-control="true"
-       data-filter-show-clear="true">
-    <thead>
-    <tr>
-    	<th data-field="cellType" data-searchable="true" data-sortable="true" data-filter-control="input">Cell type</th>
-        <th data-field="probeId" data-searchable="true" data-sortable="true" data-filter-control="input">Probe ID</th>
-        <th data-field="geneSymbol" data-searchable="true" data-sortable="true" data-filter-control="input">Gene symbol(s)</th>
-    </tr>
-    </thead>
-    </table>
- </div>
-
-<div id="lead_table_cont">
-  <h1>Lead variants of eQTLs</h1>
-  <table id="lead_table" data-toggle="table"
-       data-url="{{ host_path }}/new_lead_table"
-       data-pagination="true"
-       data-side-pagination="server"
-       data-row-style="rowStyle"
-       data-sort-name="variantId"
-       data-toggle="table"
-       data-filter-control="true"
-       data-filter-show-clear="true">
-    <thead>
-    <tr>
-        <th data-formatter="lead_fn_formatter" data-width="70px"></th>
-        <th data-field="cellType" data-searchable="true" data-sortable="true" data-filter-control="input">Cell type</th>
-        <th data-field="chromosome" data-searchable="true" data-sortable="true" data-filter-control="input">Chr</th>
-        <th data-field="geneSymbol" data-searchable="true" data-sortable="true" data-filter-control="input">Gene Symbol</th>
-        <th data-field="variantId" data-searchable="true" data-sortable="true" data-filter-control="input">Variant</th>
-        <th data-field="snpId" data-searchable="true" data-sortable="true" data-filter-control="input">rs-id</th>
-        <th data-field="pValue" data-searchable="true" data-sortable="true" data-filter-control="input" data-formatter="round_nicely">p-Value</th>
-        <th data-field="beta" data-searchable="true" data-sortable="true" data-filter-control="input" data-formatter="round_nicely">Effect size</th>
-        <th data-field="fwdIter" data-searchable="true" data-sortable="true" data-filter-control="input">Indep. sig.</th>
-        <th data-field="start" data-searchable="true" data-sortable="true" data-filter-control="input">Position</th>
-        <th data-field="probeId" data-searchable="true" data-sortable="true" data-filter-control="input">Probe ID</th>
-    </tr>
-    </thead>
-    </table>
- </div>
-
-
-	<h1 id="genome_browser">Genome browser</h1>
-	<!-- The Modal -->
-	<div id="filePicker" class="modal">
-
-	  <!-- Modal content -->
-	  <div class="modal-content">
-	    <span class="close-filePicker">&times;</span>
-	      <h1 class="filePicker-title">Add file...</h1>
-	      <br /><br /><br /><br />
-	        <p>Select input file: <input type="file" id="new_file" name="files[]" /></p>
-	        <p>If this file has an index file (.idx, .bai, ...) select it here: <input type="file" id="new_idxfile" name="files[]" /></p>
-	      <button id="filePickerCancelBtn">Cancel</button>
-	      <button id="filePickerAddBtn">Add</button>
-	  </div>
-
-	</div>
-
-	<div id="igv_div" style="padding-top: 50px;padding-bottom: 20px; height: auto"></div>
 </div>
 
 </body>

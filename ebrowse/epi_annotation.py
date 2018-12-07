@@ -69,7 +69,10 @@ chip_seq = {'bed': {
             }
 
 
-rna_seq = {'bw': {'PLT': {'RNAseq': '/nfs/research1/stegle/users/rkreuzhu/webapp_data/epi/reference/plt_natcomms_paper/6SP-Plt-RNAseq.sorted.bam.bw'}}}
+rna_seq = {'bw': {
+            #'PLT': {'RNAseq': '/nfs/research1/stegle/users/rkreuzhu/webapp_data/epi/reference/plt_natcomms_paper/6SP-Plt-RNAseq.sorted.bam.bw'}
+                }
+            }
 
 cell_type_equiv = [{"MK", "PLA", "PLT"}, {"CD4"}, {"CD8"}, {"CD14"}, {"CD15"}, {"CD19"}, {"mac", "MAC"}]
 natural_ordering = ["rnaseq", "tfbs", "histone", "open_chrom", "segmentation", "superenhancers"]

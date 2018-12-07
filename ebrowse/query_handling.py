@@ -125,6 +125,14 @@ def get_sub_eqtl(dataset_id, variantId, probeId, fwdIter):
     dict_out['detailed_eqtl'] = {dataset_id:{variantId:{probeId:{fwdIter:ret}}}}
     return jsonify(dict_out)
 
+
+def dict_to_txt(in_dict, sep="\t", header=True):
+    ks = list(in_dict.keys())
+    if header:
+        yield sep.join(ks) + "\n"
+    for i in range(len(in_dict[ks[0]])):
+        yield sep.join([str(in_dict[k][i]) for k in ks])+ "\n"
+
 @app.route('/all_eqtl')
 def get_sub_eqtl_get():
     query = {}
@@ -134,6 +142,7 @@ def get_sub_eqtl_get():
     query['variant_id'] = request.args.get('variantId', default="")
     query['probe_id'] = request.args.get('probeId', default="")
     query['fwd_iter'] = request.args.get('fwdIter', default="")
+    return_type = request.args.get('return', default=None)
     query_args = {k: v if v != "" else None for k, v in query.items()}
     #'dataset_id', 'variantId', 'probeId', and 'fwdIter'
     ret, lead_ret = get_detailed(**query_args)
@@ -143,6 +152,11 @@ def get_sub_eqtl_get():
         if all([el is None for el in ret['ldR2']]):
             ret['ldR2'] = None
     dict_out = get_return_dict()
+    # turn into tab delimited text if needed
+    if return_type is not None and return_type == "text":
+        from flask import Response
+        return Response(dict_to_txt(ret, sep="\t", header=True), mimetype='text/plain', headers={"Content-Disposition":
+                                    "attachment;filename=%s.txt"%lead_ret["id"]})
     if lead_ret is not None:
         dict_out['detailed_eqtl'] = {
             lead_ret['dataset']: {lead_ret['variantId']: {lead_ret['probeId']: {lead_ret['fwdIter']: ret}}}}
@@ -270,7 +284,7 @@ def get_expr_hist_data():
 
 @app.route('/')
 def index():
-    return render_template('pre_production.html', host_path = host_path)
+    return render_template('pre_production.html', host_path = host_path, cell_types = get_celltypes())
     var_id_col = lead_table_column_order.index("variantId")
     probe_id_col = lead_table_column_order.index("probeId")
     fwd_iter_col = lead_table_column_order.index("fwdIter")
@@ -281,6 +295,11 @@ def index():
                            var_id_col = var_id_col, probe_id_col = probe_id_col, fwd_iter_col=fwd_iter_col,
                            cell_type_col = cell_type_col, dataset_col = dataset_col, hgnc_col= hgnc_col,
                            cell_types = get_celltypes())
+
+
+@app.route('/about')
+def about_page():
+    return render_template('info_page.html', host_path = host_path)
 
 @app.route('/igv')
 def render_igv():

@@ -11,6 +11,10 @@ body {
   font: 11px sans-serif;
 }
 
+text {
+  font: 10px sans-serif;
+}
+
 .axis path,
 .axis line {
   fill: none;
@@ -45,8 +49,10 @@ body {
 }
 </style>
 <body>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
 <script src="http://d3js.org/d3.v3.min.js"></script>
-<a id="download_scatter">Download</a>
+<script src="https://rawgit.com/exupero/saveSvgAsPng/gh-pages/src/saveSvgAsPng.js"></script>
+<a id="download_png" href="#">Download PNG</a> <a id="download_svg" href="#">Download SVG</a>
 <div id="chartId">
 </div>
 
@@ -54,21 +60,10 @@ body {
 var full_width = 960,
     full_height = 500;
 
-var margin = {top: 10, right: 20, bottom: 30, left: 40},
+var margin = {top: 30, right: 20, bottom: 30, left: 40},
     width = full_width - margin.left - margin.right,
     height = full_height - margin.top - margin.bottom;
 
-
-d3.select("div#chartId")
-   .append("div")
-   .classed("svg-container", true) //container class to make it responsive
-   .append("svg")
-   .attr("id", "scatterSVG")
-   //responsive SVG needs these 2 attributes and no width and height attr
-   .attr("preserveAspectRatio", "xMinYMin meet")
-   .attr("viewBox", (margin.left* (-2)) + " " + (margin.top* (-2)) + " " + (full_width + (margin.left + margin.right)*2) + " " + (height+(margin.top + margin.bottom)*2))
-   //class to make it responsive
-   .classed("svg-content-responsive", true);
 
 /*
  * value accessor - returns the value to encode for a given data object.
@@ -77,6 +72,12 @@ d3.select("div#chartId")
  * axis - sets up axis
  */
 
+// setup x 
+var xValue = function(d) { return d.Calories;}, // data -> value
+    //xScale = d3.scale.linear().range([0, width]), // value -> display
+    xScale = d3.scale.ordinal().range([width*0.2, width*0.8])
+    xMap = function(d) { return xScale(xValue(d));}, // data -> display
+    xAxis = d3.svg.axis().scale(xScale).orient("bottom");
 
 // setup y
 var yValue = function(d) { return d["Protein (g)"];}, // data -> value
@@ -88,57 +89,18 @@ var yValue = function(d) { return d["Protein (g)"];}, // data -> value
 var cValue = function(d) { return d.Manufacturer;},
     color = d3.scale.category10();
 
-set_download_img = function(){
-    //https://stackoverflow.com/questions/11620698/how-to-trigger-a-file-download-when-clicking-an-html-button-or-javascript
-
-    elm_id = "scatterSVG"
-      //get svg element.
-    var svg = document.getElementById(elm_id);
-
-    //get svg source.
-    var serializer = new XMLSerializer();
-    var source = serializer.serializeToString(svg);
-
-    //add name spaces.
-    if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
-        source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
-    }
-    if(!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)){
-        source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
-    }
-
-    //add xml declaration
-    source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
-
-    //convert svg source to URI data scheme.
-    var url = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(source);
-
-    //set url value to a element's href attribute.
-    document.getElementById("download_scatter").href = url;
-    //you can download svg file by right click menu.
-}
-
-function writeDownloadLink(){
-    var html = d3.select("#scatterSVG")
-        .attr("title", "svg_title")
-        .attr("version", 1.1)
-        .attr("xmlns", "http://www.w3.org/2000/svg")
-        .node().parentNode.innerHTML;
-    d3.select("#download_scatter")
-        .attr("href-lang", "image/svg+xml")
-        .attr("href", "data:image/svg+xml;base64,\n" + btoa(html))
-};
-
-
 
 // add the graph canvas to the body of the webpage
-//var svg = d3.select("body").append("svg")
-//    .attr("width", width + margin.left + margin.right)
-//    .attr("height", height + margin.top + margin.bottom)
-//  .append("g")
-//    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+var svg = d3.select("div#chartId")
+   .append("div")
+   .classed("svg-container", true) //container class to make it responsive
+   .append("svg")
+   .attr("id", "scatterSVG")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-var svg = d3.select("#scatterSVG")
 
 // add the tooltip area to the webpage
 var tooltip = d3.select("body").append("div")
@@ -285,7 +247,14 @@ d3.json("{{ host_path }}/{{ expr_plot_link }}?id={{ id }}", function(json_data) 
       .style("text-anchor", "end")
       .text(function(d) { return d;})
 
-  set_download_img();
+  $("#download_png").click(function(e){
+    saveSvgAsPng(d3.select("svg").node(), "scatterplot.png", {backgroundColor: "white"});
+  });
+  $("#download_svg").click(function(e){
+    saveSvg(d3.select("svg").node(), "scatterplot.svg");
+  });
+
+
 });
 
 
