@@ -64,8 +64,8 @@
 	}
 
     function lead_fn_formatter(value, row, index, field) {
-        glyphs = {"glyphicon-search": 'igv_go_to(\'chr'+row.chromosome+'\', '+row.start+')', "glyphicon-plus": 'create_track_by_id(\''+row.id+'\', \''+row.geneSymbol+'\')', "glyphicon-eye-open": 'add_scatter(\''+row.id+'\')'}
-        glyph_tooltips = {"glyphicon-search": 'Zoom in genome browser', "glyphicon-plus": 'Add to genome browser', "glyphicon-eye-open": 'Display expression boxplot'}
+        glyphs = {"glyphicon-search": 'igv_go_to(\'chr'+row.chromosome+'\', '+row.start+')', "glyphicon-plus": 'create_track_by_id(\''+row.id+'\', \''+row.geneSymbol+'\')', "glyphicon-eye-open": 'add_scatter(\''+row.id+'\')', "glyphicon-stats": 'add_hist(\''+row.cellType+'\', \''+row.geneSymbol+'\')'}
+        glyph_tooltips = {"glyphicon-search": 'Zoom in genome browser', "glyphicon-plus": 'Add to genome browser', "glyphicon-eye-open": 'Display expression boxplot', "glyphicon-stats": 'Display expression histogram'}
         html_str = "<div>"
         for (gl in glyphs) {
         	if ((gl == 'glyphicon-plus') && (window.eqtl_detail_tracks.indexOf(row.id) != -1)) continue;
@@ -80,9 +80,15 @@
         href = "{{ host_path }}/expr_boxplot?id="+id;
         window.open(href);
     }
-    
+
+    function add_hist(cellType, hgnc){
+        href = "{{ host_path }}/expr_hist?cellType="+cellType +"&geneSymbol="+hgnc ;
+        window.open(href);
+    }
+
     function round_nicely(value, row, index, field){
-        return value.toPrecision(3);
+        if (value) return value.toPrecision(3);
+        return value;
     }
 
     function refresh_table(table_id){
@@ -275,25 +281,6 @@
                 }
             },
             tracks: [
-                {
-                     type: 'bloodeqtl',
-                     sourceType: 'bloodeqtl',
-                     url: igv_eqtl_baseurl,
-                     dataset: 'merged',
-                     cellType: 'CD14',
-                     name: 'CD14 blood eQTL data',
-                },
-                {
-                    featureType: 'genes',
-                    url: 'http://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg19/genes/gencode.v18.collapsed.bed',
-                    name: 'Gencode v.18 genes',
-                    order: 10000,
-                    displayMode: 'EXPANDED',
-                    height: 100,
-                    autoHeight: true,
-                    removable: false,
-                    labelDisplayMode: 'SLANT'
-                }
             ]
         };
 
@@ -453,7 +440,7 @@
 
 .CD15_ct_tag{
 	color: #052A3C;
-	background-color: #4C778C;
+	background-color: #516F90;
 }
 
 .CD19_ct_tag{
@@ -547,21 +534,24 @@
        data-row-style="rowStyle"
        data-sort-name="variantId"
        data-toggle="table"
+	   data-show-columns="true"
        data-filter-control="true"
        data-filter-show-clear="true">
     <thead>
     <tr>
-        <th data-formatter="lead_fn_formatter" data-width="70px"></th>
+        <th data-formatter="lead_fn_formatter" data-width="90px"></th>
         <th data-field="cellType" data-searchable="true" data-sortable="true" data-filter-control="input">Cell type</th>
         <th data-field="chromosome" data-searchable="true" data-sortable="true" data-filter-control="input">Chr</th>
         <th data-field="geneSymbol" data-searchable="true" data-sortable="true" data-filter-control="input">Gene Symbol</th>
-        <th data-field="variantId" data-searchable="true" data-sortable="true" data-filter-control="input">Variant</th>
+        <th data-field="variantId" data-searchable="true" data-sortable="true" data-filter-control="input" >Variant</th>
         <th data-field="snpId" data-searchable="true" data-sortable="true" data-filter-control="input">rs-id</th>
-        <th data-field="pValue" data-searchable="true" data-sortable="true" data-filter-control="input" data-formatter="round_nicely">p-Value</th>
+        <th data-field="pValue" data-searchable="true" data-sortable="true" data-filter-control="input" data-formatter="round_nicely" data-visible="false">p-Value</th>
         <th data-field="beta" data-searchable="true" data-sortable="true" data-filter-control="input" data-formatter="round_nicely">Effect size</th>
-        <th data-field="fwdIter" data-searchable="true" data-sortable="true" data-filter-control="input">Indep. sig.</th>
-        <th data-field="start" data-searchable="true" data-sortable="true" data-filter-control="input">Position</th>
-        <th data-field="probeId" data-searchable="true" data-sortable="true" data-filter-control="input">Probe ID</th>
+        <th data-field="maf" data-searchable="true" data-sortable="true" data-filter-control="input" data-formatter="round_nicely" data-visible="false">MAF</th>
+		<th data-field="fdr" data-searchable="true" data-sortable="true" data-filter-control="input" data-formatter="round_nicely">FDR</th>
+		<th data-field="fwdIter" data-searchable="true" data-sortable="true" data-filter-control="input">Indep. sig.</th>
+		<th data-field="start" data-searchable="true" data-sortable="true" data-filter-control="input">Position</th>
+        <th data-field="probeId" data-searchable="true" data-sortable="true" data-filter-control="input" data-visible="false">Probe ID</th>
     </tr>
     </thead>
     </table>

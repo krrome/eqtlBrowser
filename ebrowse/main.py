@@ -24,6 +24,7 @@ def get_return_dict():
     return {"format": "0.1"}
 
 global_address = "http://%s:%d"%(PATHS['flask_host'], PATHS['flask_port'])
+global_address = ""
 host_path = global_address
 
 
@@ -187,9 +188,9 @@ def get_expr_hist():
     query = {}
     query["geneSymbol"] = request.args.get('geneSymbol', default=None)
     query["cellType"] = request.args.get('cellType', default=None)
-    query['host_path'] = host_path
     if any([query[k] is None or query[k] == "" for k in query]):
         abort(404)
+    query['host_path'] = host_path
     return render_template('histogram.html', expr_hist_link="expr_hist_data", **query)
 
 
@@ -225,7 +226,7 @@ def about_page():
 @app.route('/get_epi_tracks')
 def get_epi_tracks():
     cell_type = request.args.get('cellType', default="")
-    return jsonify(get_tracks(cell_type, global_address + "/epi_tracks"))
+    return jsonify(get_tracks(cell_type, global_address + "/static"))
 
 @app.route('/epi_tracks/<path:path>')
 def epi_tracks(path):
