@@ -12,13 +12,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
 
-    <script src="{{ url_for('static', filename='promise.js') }}"></script>
-    <script src="{{ url_for('static', filename='zlib_and_gzip.js') }}"></script>
-    <script src="{{ url_for('static', filename='inflate.js') }}"></script>
+    <script src="{{ interfix }}{{ url_for('static', filename='promise.js') }}"></script>
+    <script src="{{ interfix }}{{ url_for('static', filename='zlib_and_gzip.js') }}"></script>
+    <script src="{{ interfix }}{{ url_for('static', filename='inflate.js') }}"></script>
 
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='igv.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='fa-svg-with-js.css') }}"/>
-    <script type="text/javascript" src="{{ url_for('static', filename='igv.min.js') }}"></script>
+    <link rel="stylesheet" type="text/css" href="{{ interfix }}{{ url_for('static', filename='igv.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ interfix }}{{ url_for('static', filename='fa-svg-with-js.css') }}"/>
+    <script type="text/javascript" src="{{ interfix }}{{ url_for('static', filename='igv.min.js') }}"></script>
 
 	<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="https:/maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">

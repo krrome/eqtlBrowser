@@ -1,6 +1,7 @@
 from yaml import load
 import sys
 import pkg_resources
+import os
 
 __version__ = '0.1'
 
@@ -21,3 +22,6 @@ def get_local_paths():
     return config[get_exec_condition()]
 
 PATHS = get_local_paths()
+host_interfix = ""
+if 'INTERFIX' in os.environ and os.environ['INTERFIX'] != "":
+    host_interfix = "/"+os.environ['INTERFIX'].strip("/")

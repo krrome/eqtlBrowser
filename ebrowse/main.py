@@ -1,7 +1,7 @@
 from flask import Flask, request
 from flask import jsonify, send_from_directory
 from flask import abort
-from ebrowse import PATHS
+from ebrowse import PATHS, host_interfix
 import re
 from collections import OrderedDict
 from ebrowse import get_exec_condition
@@ -25,6 +25,11 @@ def get_return_dict():
 
 global_address = "http://%s:%d"%(PATHS['flask_host'], PATHS['flask_port'])
 global_address = ""
+
+if global_address != "" and host_interfix != "":
+    global_address += "/"
+global_address += host_interfix
+
 host_path = global_address
 
 
@@ -206,7 +211,8 @@ def get_expr_hist_data():
 
 @app.route('/')
 def index():
-    return render_template('pre_production.html', host_path = host_path, cell_types = get_celltypes())
+    return render_template('pre_production.html', host_path = host_path, cell_types = get_celltypes(),
+                           interfix = host_interfix)
     var_id_col = lead_table_column_order.index("variantId")
     probe_id_col = lead_table_column_order.index("probeId")
     fwd_iter_col = lead_table_column_order.index("fwdIter")
