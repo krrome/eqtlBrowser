@@ -25,3 +25,6 @@ PATHS = get_local_paths()
 host_interfix = ""
 if 'INTERFIX' in os.environ and os.environ['INTERFIX'] != "":
     host_interfix = "/"+os.environ['INTERFIX'].strip("/")
+
+if 'MONGO_HOST' in os.environ and os.environ['MONGO_HOST'] != "":
+    PATHS["mongo_host"] = os.environ['MONGO_HOST']
