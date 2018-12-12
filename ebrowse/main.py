@@ -211,18 +211,12 @@ def get_expr_hist_data():
 
 @app.route('/')
 def index():
+    return render_template('landing_page.html', host_path = host_path, interfix = host_interfix)
+
+@app.route('/results')
+def results():
     return render_template('pre_production.html', host_path = host_path, cell_types = get_celltypes(),
                            interfix = host_interfix)
-    var_id_col = lead_table_column_order.index("variantId")
-    probe_id_col = lead_table_column_order.index("probeId")
-    fwd_iter_col = lead_table_column_order.index("fwdIter")
-    cell_type_col = lead_table_column_order.index("cellType")
-    dataset_col = lead_table_column_order.index("dataset")
-    hgnc_col = lead_table_column_order.index("geneSymbol")
-    return render_template('table_igv_iframe.html', port=PATHS['flask_port'], colnames=lead_table_column_labels,
-                           var_id_col = var_id_col, probe_id_col = probe_id_col, fwd_iter_col=fwd_iter_col,
-                           cell_type_col = cell_type_col, dataset_col = dataset_col, hgnc_col= hgnc_col,
-                           cell_types = get_celltypes())
 
 
 @app.route('/about')

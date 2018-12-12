@@ -12,16 +12,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-mousewheel/3.1.13/jquery.mousewheel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
 
-    <script src="{{ host_path }}/static_files/promise.js"></script>
-    <script src="{{ host_path }}/static_files/zlib_and_gzip.js"></script>
-    <script src="{{ host_path }}/static_files/inflate.js"></script>
 
-    <link rel="stylesheet" type="text/css" href="{{ host_path }}/static_files/igv.css">
-    <link rel="stylesheet" type="text/css" href="{{ host_path }}/static_files/fa-svg-with-js.css"/>
-    <script type="text/javascript" src="{{ host_path }}/static_files/igv.min.js"></script>
+    <script src="{{ interfix }}{{ url_for('static', filename='promise.js') }}"></script>
+    <script src="{{ interfix }}{{ url_for('static', filename='zlib_and_gzip.js') }}"></script>
+    <script src="{{ interfix }}{{ url_for('static', filename='inflate.js') }}"></script>
+
+
+    <link rel="stylesheet" type="text/css" href="{{ interfix }}{{ url_for('static', filename='igv.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ interfix }}{{ url_for('static', filename='fa-svg-with-js.css') }}"/>
+    <script type="text/javascript" src="{{ interfix }}{{ url_for('static', filename='igv.min.js') }}"></script>
 
 	<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-	<link rel="stylesheet" type="text/css" href="https:/maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="https://rawgit.com/wenzhixin/bootstrap-table/master/src/bootstrap-table.css">
     <script type="text/javascript" src="https://rawgit.com/wenzhixin/bootstrap-table/master/src/bootstrap-table.js"></script>
     <script src="https://rawgit.com/wenzhixin/bootstrap-table/master/src/extensions/filter-control/bootstrap-table-filter-control.js"></script>
@@ -30,12 +32,14 @@
   <style type="text/css">
     #page-wrapper {
     padding: 0 2.6%;
-    padding-top: 50px;
+    padding-top: 80px;
     padding-right: 2.6%;
     padding-bottom: 0px;
     padding-left: 2.6%;
     position: relative;
 	}
+
+
 
   </style>
 
@@ -408,7 +412,7 @@
 		        <span class="icon-bar"></span>
 		        <span class="icon-bar"></span>
 		      </button>
-		      <a class="navbar-brand" href="{{ host_path }}/">Blood eQTL browser</a>
+		      <a class="navbar-brand" href="{{ host_path }}/results">Blood eQTL browser</a>
 		    </div>
 		  </div><!-- /.container-fluid -->
 		</nav>

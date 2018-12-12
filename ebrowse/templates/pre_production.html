@@ -184,7 +184,7 @@
 
     igv_go_to = function(var_chrom, var_pos){
     	if ((var_chrom != "") && (var_pos != 0)){
-            igv.browser.goto(var_chrom, var_pos-10000, var_pos+10000);
+            igv.browser.goto(var_chrom, var_pos-100000, var_pos+100000);
         }
     }
 
@@ -193,6 +193,8 @@
         $.getJSON( igv_eqtl_baseurl + 'get_epi_tracks?cellType='+cellType, function( data ) {
 
             for (i in data){
+                data[i]["labelFormatter"] = track_label_formatter
+                data[i]["cellType"] = cellType
                 igv.browser.loadTrack(data[i]);
             };
           //$.each( data, function( inner_dict ) {
@@ -574,8 +576,8 @@
 	  </div>
 
 	</div>
-
 	<div id="igv_div" style="padding-top: 50px;padding-bottom: 20px; height: auto"></div>
+	 <div class="pull-right"><img src="{{ interfix }}{{ url_for('static', filename='lz_legend.svg') }}" height="70px" style="margin-bottom: 100px;"/></div>
 </div>
 
 <!-- Global site tag (gtag.js) - Google Analytics -->
