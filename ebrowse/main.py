@@ -186,6 +186,7 @@ def get_expr_boxplot():
     else:
         abort(404)
     query['host_path'] = host_path
+    query['interfix'] = host_interfix
     return render_template('scatterplot.html', expr_plot_link = "expr_boxplot_data", **query)
 
 @app.route('/expr_hist')
