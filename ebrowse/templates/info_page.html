@@ -513,8 +513,13 @@
 
 
   <h2>Using the REST API</h2>
-  <p>REST queries can be used to download data as it is displayed. More details on this will be added soon.</p>
-
+  <p>REST queries can be used to download data in text file format as it is displayed.</p>
+     <h4>Lead table</h4>
+     <p>To download the full table of lead eQTL results as a tab-delimited text file use &quot;/new_lead_table?return=text&quot;</p>
+     <h4>Full summary statistics per eQTL</h4>
+     <p>To download the full summary statistics of a specific eQTL as a tab-delimited text file you should use
+         &quot;/all_eqtl?id=&lt;id&gt;&return=text&quot;. Where &lt;id&gt; should be replaced by a valid
+     lead eQTL result ID as it is defined in the &quot;id&quot; column of the lead table (see above).</p>
 
 </div>
 

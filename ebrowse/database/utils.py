@@ -69,13 +69,17 @@ def get_leads_allsig(dataset, cell_type, fdr_thresh = 0.01):
 def assert_valid_objs(obj):
     return [el.decode("utf8") if hasattr(el, "decode") else el for el in obj]
 
-def get_detailed_results_entry(fh, fh_ld, probeId, fwdIter, cell_type, dataset):
+def get_detailed_results_entry(fh, fh_ld, reestim_fh, probeId, fwdIter, cell_type, dataset):
     ret = {}
     fwdIter = int(fwdIter)
     if int(fwdIter) < 0 or int(fwdIter) >= fh[probeId]['betas_added'].shape[0]:
         return None
-    ret['beta'] = fh[probeId]['betas_added'][:][fwdIter, :].tolist()
-    ret['pValue'] = fh[probeId]['pvadded'][:][fwdIter, :].tolist()
+    if reestim_fh is not None:
+        ret['beta'] = reestim_fh[probeId]['betas_added_re'][:][fwdIter, :].tolist()
+        ret['pValue'] = reestim_fh[probeId]['pvadded_re'][:][fwdIter, :].tolist()
+    else:
+        ret['beta'] = fh[probeId]['betas_added'][:][fwdIter, :].tolist()
+        ret['pValue'] = fh[probeId]['pvadded'][:][fwdIter, :].tolist()
     ret['pValue'] = np.clip(fh[probeId]['pvadded'][:][fwdIter, :].tolist(), 1e-310, 1).tolist()
     ret['snpId'] = [None]*len(ret['pValue'])
     ret['variantId'] = fh[probeId]['rs'][:].tolist()
@@ -114,15 +118,16 @@ def get_all_results_iter():
     eqtls_df['chrom'] = eqtls_df['chrom'].astype(str)
     eqtls_df['gene'] = eqtls_df['gene'].astype(str)
     eqtls_df['dataset'] = "merged"
-    eqtls_df = eqtls_df[["chrom", "pos", "betas_added", "pvadded", "rsids", "rs", "hgnc", "gene", "fwd_sel_itr",
-                         "cell_type", "dataset", "file", "ensembl_gid", "maf", "pv_bonf_BH"]]
-    eqtls_df.columns = ["chromosome", "start", "beta", "pValue", "snpId", "variantId", "geneSymbol", "probeId",
-                        "fwdIter", "cellType", "dataset","file", "ensembleGId", "AAF", "fdr"]
+    eqtls_df = eqtls_df[["chrom", "pos", "betas_added", "betas_added_re", "pvadded", "pvadded_re", "rsids", "rs", "hgnc", "gene", "fwd_sel_itr",
+                         "cell_type", "dataset", "file", "ensembl_gid", "maf", "pv_bonf_BH", "pv_bonf_BH_re"]]
+    eqtls_df.columns = ["chromosome", "start", "beta", "betaFM", "pValue", "pValueFM", "snpId", "variantId", "geneSymbol", "probeId",
+                        "fwdIter", "cellType", "dataset","file", "ensembleGId", "AAF", "fdr", "fdrFM"]
     maf= eqtls_df["AAF"].values
     maf[maf > 0.5] = 1-maf[maf > 0.5]
     eqtls_df['maf'] = maf
     eqtls_df = eqtls_df[[c for c in eqtls_df.columns if c != "AAF"]]
-    eqtls_df['pValue'] = np.clip(eqtls_df['pValue'], 1e-310, 1)
+    for c in ['pValue', 'pValueFM', 'fdr', 'fdrFM']:
+        eqtls_df[c] = np.clip(eqtls_df[c], 1e-310, 1)
     eqtls_df['cellType'] = eqtls_df['cellType'].replace("PLA", "PLT").replace("mac", "MAC")
     ret = eqtls_df[[c for c in eqtls_df.columns if c != "file"]].to_dict("list")
     ret = {k: assert_valid_objs(v) for k, v in ret.items()}
@@ -135,7 +140,9 @@ def get_all_results_iter():
         bpath = "/".join(new_path.rstrip("/").split("/")[:-1])
         ld_file = bpath + "/lead_LDs_%d.hdf5" % j
         fh_ld = pd.HDFStore(ld_file, "r")
-        details_dict = get_detailed_results_entry(fh, fh_ld, entries["probeId"], entries["fwdIter"],
+        reestim_file = new_path[:-len(".hdf5")] + "_BReestim.hdf5"
+        reestim_fh = h5py.File(reestim_file, "r")
+        details_dict = get_detailed_results_entry(fh, fh_ld, reestim_fh, entries["probeId"], entries["fwdIter"],
                                                   entries["cellType"], entries["dataset"])
         fh.close()
         fh_ld.close()

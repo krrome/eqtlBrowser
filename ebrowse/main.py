@@ -111,6 +111,9 @@ def get_sub_eqtl_get():
     query['fwd_iter'] = request.args.get('fwdIter', default="")
     return_type = request.args.get('return', default=None)
     query_args = {k: v if v != "" else None for k, v in query.items()}
+    # Don't let people try to search through the summary stats yet.
+    if query_args['leadEqtlResultId'] is None:
+        return jsonify(None)
     #'dataset_id', 'variantId', 'probeId', and 'fwdIter'
     ret, lead_ret = get_detailed(**query_args)
     if ret is None:
@@ -158,7 +161,14 @@ def get_bootstrap_lead_table():
     query['offset'] = request.args.get('offset', default="")
     query['limit'] = request.args.get('limit', default="")
     query['filterDict'] = json.loads(request.args.get('filter', default="null"))
+    return_type = request.args.get('return', default=None)
+    query = {k: v if v != "" else None for k, v in query.items()}
     lead_results, all_entries, num_filtered = get_leads(exact_match = False, **query)
+    # turn into tab delimited text if needed
+    if return_type is not None and return_type == "text":
+        from flask import Response
+        return Response(dict_to_txt(lead_results, sep="\t", header=True), mimetype='text/plain', headers={"Content-Disposition":
+                                                                                                     "attachment;filename=leadEQTLs.txt"})
     ret = lead_bootstrap_formatting(lead_results, all_entries, num_filtered, reply_to_search = True)
     return jsonify(ret)
 

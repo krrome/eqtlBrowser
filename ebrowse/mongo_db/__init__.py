@@ -5,8 +5,8 @@ from mongoengine import Document, FloatField, IntField, StringField, EmbeddedDoc
 
 
 
-transfer_keys_lead = ["id", "beta", "chromosome", "geneSymbol", "pValue", "snpId", "start", "variantId", "fwdIter",
-                         "probeId", "cellType", "dataset", "fdr", "maf", "ensembleGId"]
+transfer_keys_lead = ["id", "beta", "betaFM", "chromosome", "geneSymbol", "pValue", "pValueFM", "snpId", "start", "variantId", "fwdIter",
+                         "probeId", "cellType", "dataset", "fdr", "fdrFM", "maf", "ensembleGId"]
 
 transfer_keys_detailed = ["beta", "chromosome", "geneSymbol", "pValue", "snpId", "start", "variantId", "fwdIter",
                          "probeId", "cellType", "dataset", "ldR2"]
@@ -70,9 +70,11 @@ class LeadEqtlResult(Document):
     id = StringField(primary_key=True)# generate a unique ID for this entry
     leadEqtlExpressionId = StringField()
     beta = FloatField()
+    betaFM = FloatField()
     chromosome = StringField(max_length=32)
     geneSymbol = StringField(max_length=32)# index
     pValue = FloatField()
+    pValueFM = FloatField()
     snpId = StringField(max_length=32)
     start = IntField()
     variantId = StringField(max_length=32)# index
@@ -81,6 +83,7 @@ class LeadEqtlResult(Document):
     cellType = StringField(max_length=32)# index
     dataset = StringField(max_length=32)# index
     fdr = FloatField()
+    fdrFM = FloatField()
     maf = FloatField()
     ensembleGId = StringField(max_length=32)
     colocalisation = EmbeddedDocumentListField(Colocalisation)
