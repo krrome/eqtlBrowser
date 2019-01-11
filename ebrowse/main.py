@@ -1,7 +1,9 @@
 from flask import Flask, request
 from flask import jsonify, send_from_directory
 from flask import abort
-from ebrowse import PATHS, host_interfix
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from ebrowse import PATHS, host_interfix, max_req_per_sec, max_req_per_min
 import re
 from collections import OrderedDict
 from ebrowse import get_exec_condition
@@ -31,6 +33,15 @@ if global_address != "" and host_interfix != "":
 global_address += host_interfix
 
 host_path = global_address
+
+
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["%d per minute"%max_req_per_min]
+)
+
+print ([max_req_per_min, max_req_per_sec])
 
 
 def split_dict_by(in_dict, split_keys = ["dataset", "cellType"]):
@@ -80,6 +91,7 @@ def parse_datatable_order(order_dict, column_labels):
 
 
 @app.route('/eqtl')
+@limiter.limit("%d per second"%max_req_per_sec)
 def get_lead_eqtl():
     """
     :return: 
@@ -101,6 +113,7 @@ def get_lead_eqtl():
 
 
 @app.route('/all_eqtl')
+@limiter.limit("%d per second"%max_req_per_sec)
 def get_sub_eqtl_get():
     query = {}
     query['leadEqtlResultId'] = request.args.get('id', default="")
@@ -136,6 +149,7 @@ def get_sub_eqtl_get():
 
 
 @app.route('/tested_probes')
+@limiter.limit("%d per second"%max_req_per_sec)
 def get_tested_probes_table():
     import json
     query = {}
@@ -152,6 +166,7 @@ def get_tested_probes_table():
 
 
 @app.route('/new_lead_table')
+@limiter.limit("%d per second"%max_req_per_sec)
 def get_bootstrap_lead_table():
     import json
     query = {}
@@ -173,6 +188,7 @@ def get_bootstrap_lead_table():
     return jsonify(ret)
 
 @app.route('/expr_boxplot_data')
+@limiter.limit("%d per second"%max_req_per_sec)
 def get_expr_boxplot_data():
     query = {}
     id = request.args.get('id', default=None)
@@ -188,6 +204,7 @@ def get_expr_boxplot_data():
     return jsonify(ret)
 
 @app.route('/expr_boxplot')
+@limiter.limit("%d per second"%max_req_per_sec)
 def get_expr_boxplot():
     query = {}
     id = request.args.get('id', default=None)
@@ -211,6 +228,7 @@ def get_expr_hist():
 
 
 @app.route('/expr_hist_data')
+@limiter.limit("%d per second"%max_req_per_sec)
 def get_expr_hist_data():
     query = {}
     query["cellType"] = request.args.get('cellType', default=None)
@@ -225,6 +243,7 @@ def index():
     return render_template('landing_page.html', host_path = host_path, interfix = host_interfix)
 
 @app.route('/results')
+@limiter.limit("%d per second"%max_req_per_sec)
 def results():
     return render_template('pre_production.html', host_path = host_path, cell_types = get_celltypes(),
                            interfix = host_interfix)

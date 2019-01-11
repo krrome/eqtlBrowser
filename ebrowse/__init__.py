@@ -28,3 +28,12 @@ if 'INTERFIX' in os.environ and os.environ['INTERFIX'] != "":
 
 if 'MONGO_HOST' in os.environ and os.environ['MONGO_HOST'] != "":
     PATHS["mongo_host"] = os.environ['MONGO_HOST']
+
+max_req_per_sec = 20
+max_req_per_min = 200
+
+if 'REQ_PER_MIN' in os.environ and os.environ['REQ_PER_MIN'] != "":
+    max_req_per_min = int(os.environ['REQ_PER_MIN'])
+
+if 'REQ_PER_SEC' in os.environ and os.environ['REQ_PER_SEC'] != "":
+    max_req_per_sec = int(os.environ['REQ_PER_SEC'])

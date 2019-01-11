@@ -10,6 +10,7 @@ requirements = [
     "pyyaml",
     "flask==1.0.2",
     "setuptools",
+    "flask_limiter==1.0.1",
 ]
 
 

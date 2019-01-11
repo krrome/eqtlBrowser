@@ -75,7 +75,7 @@ def get_lead_expr_data():
         for k in fh:
             ret = {k2: fh[k][k2][:] if "S" not in fh[k][k2][:].dtype.str else fh[k][k2][:].astype(str)
                    for k2 in ['dot_labels', 'genoLabels', 'geno_col', 'pheno_col']}
-            ret['dot_labels'] = pd.Series(ret['dot_labels']).str.replace("Belgium", "CEDAR").replace("Oxford", "WTCHG").replace("Inhouse", "BLUEPRINT").replace("mac", "MAC").replace("PLA", "PLT").values
+            ret['dot_labels'] = pd.Series(ret['dot_labels']).str.replace("Belgium", "CEDAR").str.replace("Oxford", "WTCHG").str.replace("Inhouse", "BLUEPRINT").str.replace("mac", "MAC").str.replace("PLA", "PLT").values
             ret2 = {k2: ret[k2].tolist() for k2 in ret}
             thebytes = zlib.compress(json.dumps(ret2).encode("utf8"))
             yield k, thebytes
