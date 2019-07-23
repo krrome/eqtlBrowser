@@ -24,9 +24,11 @@
 
 	<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="https://rawgit.com/wenzhixin/bootstrap-table/master/src/bootstrap-table.css">
-    <script type="text/javascript" src="https://rawgit.com/wenzhixin/bootstrap-table/master/src/bootstrap-table.js"></script>
-    <script src="https://rawgit.com/wenzhixin/bootstrap-table/master/src/extensions/filter-control/bootstrap-table-filter-control.js"></script>
+
+    <!-- copies from https://github.com/wenzhixin/bootstrap-table/tree/2f311a9809dd773b1e2a9d30860b1b27bdc42567/src -->
+	<link rel="stylesheet" type="text/css" href="{{ interfix }}{{ url_for('static', filename='bootstrap-table.css') }}">
+    <script type="text/javascript" src="{{ interfix }}{{ url_for('static', filename='bootstrap-table.js') }}"></script>
+    <script src="{{ interfix }}{{ url_for('static', filename='bootstrap-table-filter-control.js') }}"></script>
 
 
   <style type="text/css">
